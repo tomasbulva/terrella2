@@ -58,9 +58,18 @@ class WallpaperUpdateWorker(context: Context, params: WorkerParameters) : Corout
         val applied = WallpaperHelper.decodeAndApply(applicationContext, asset)
 
         NotificationHelper.showStatus(
-            applicationContext,
+            context = applicationContext,
             locationName = "${location.name}, ${location.country}".trim(' ', ','),
-            summary = "${snapshot.condition.name.lowercase().replace('_', ' ')} · ${snapshot.tempC}°C",
+            condition = snapshot.condition,
+            isDay = snapshot.isDay,
+            tempC = snapshot.tempC,
+            useMetric = settings.useMetric,
+            latitude = location.latitude,
+            longitude = location.longitude,
+            locationTimezone = location.timezone.ifBlank { null },
+            quietTimeEnabled = settings.quietEnabled,
+            quietStartHour = settings.quietStartHour,
+            quietEndHour = settings.quietEndHour,
         )
 
         Telemetry.event(

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -14,15 +15,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material.icons.filled.Title
+import androidx.compose.foundation.Image
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Card
@@ -45,7 +49,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -70,21 +76,47 @@ fun SettingsScreen(
     val settings by settingsRepository.settings.collectAsStateWithLifecycle(initialValue = null)
     val s = settings ?: return
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Text("Settings", style = MaterialTheme.typography.headlineSmall)
-        WeatherSection(s, settingsRepository, scope)
-        WallpaperSection(s, settingsRepository, scope)
-        LocationsSection(s, settingsRepository, scope)
-        ExperienceSection(s, settingsRepository, scope)
-        TelemetrySection(s, settingsRepository, scope)
-        OutlinedButton(onClick = onNavigateToWorld, modifier = Modifier.fillMaxWidth()) {
-            Text("Back to world")
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(com.terrella.worlds.R.drawable.app_background),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp),
+        ) {
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "Settings",
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                )
+                IconButton(onClick = onNavigateToWorld) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Close",
+                        tint = Color.White,
+                    )
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            WeatherSection(s, settingsRepository, scope)
+            WallpaperSection(s, settingsRepository, scope)
+            LocationsSection(s, settingsRepository, scope)
+            ExperienceSection(s, settingsRepository, scope)
+            TelemetrySection(s, settingsRepository, scope)
+            Spacer(Modifier.height(32.dp))
         }
     }
 }
@@ -107,19 +139,6 @@ private fun WeatherSection(s: Settings, repo: SettingsRepository, scope: kotlinx
                     },
                 )
                 Text(provider.displayName, style = MaterialTheme.typography.bodyLarge)
-            }
-        }
-        if (WeatherProviders.byId(s.weatherProviderId).requiresKey) {
-            var key by remember(s.weatherProviderId) { mutableStateOf(s.owmApiKey) }
-            OutlinedTextField(
-                value = key,
-                onValueChange = { key = it },
-                label = { Text("API key (stored on this device only)") },
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(Modifier.height(4.dp))
-            Button(onClick = { scope.launch { repo.setOwmApiKey(key) } }, enabled = key.isNotBlank()) {
-                Text("Save key")
             }
         }
         WeatherTestRow(s, repo)
