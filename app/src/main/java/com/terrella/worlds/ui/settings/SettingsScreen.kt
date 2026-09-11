@@ -16,7 +16,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,7 +31,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.terrella.worlds.data.Settings
 import com.terrella.worlds.data.SettingsRepository
@@ -227,18 +235,92 @@ private fun LocationsSection(s: Settings, repo: SettingsRepository, scope: kotli
 @Composable
 private fun ExperienceSection(s: Settings, repo: SettingsRepository, scope: kotlinx.coroutines.CoroutineScope) {
     SectionCard("Quiet time") {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            Switch(checked = s.quietEnabled, onCheckedChange = { scope.launch { repo.setQuietEnabled(it) } })
-            Text(
-                "Pause updates during quiet hours",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(start = 8.dp),
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text("Quiet time", style = MaterialTheme.typography.titleMedium)
+            Switch(
+                checked = s.quietEnabled,
+                onCheckedChange = { scope.launch { repo.setQuietEnabled(it) } },
             )
         }
-        Text(
-            "Quiet window: ${s.quietStartHour}:00 – ${s.quietEndHour}:00 (hour pickers land next release)",
-            style = MaterialTheme.typography.bodySmall,
-        )
+
+        if (s.quietEnabled) {
+            val start = remember(s.quietStartHour) { mutableStateOf(s.quietStartHour.toFloat()) }
+            val end = remember(s.quietEndHour) { mutableStateOf(s.quietEndHour.toFloat()) }
+
+            Text(
+                text = "Active window: %02d:00 – %02d:00".format(start.value.toInt(), end.value.toInt()),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(Modifier.height(8.dp))
+
+            // Two-handle range slider (0–24h, 25 discrete positions) — T1 pattern
+            RangeSlider(
+                value = start.value..end.value,
+                onValueChange = { range ->
+                    start.value = range.start
+                    end.value = range.endInclusive
+                },
+                onValueChangeFinished = {
+                    scope.launch {
+                        repo.setQuietStartHour(start.value.toInt())
+                        repo.setQuietEndHour(end.value.toInt())
+                    }
+                },
+                valueRange = 0f..24f,
+                steps = 23,
+                modifier = Modifier.fillMaxWidth(),
+                colors = SliderDefaults.colors(
+                    thumbColor = MaterialTheme.colorScheme.primary,
+                    activeTrackColor = MaterialTheme.colorScheme.primary,
+                    inactiveTrackColor = MaterialTheme.colorScheme.outline,
+                ),
+            )
+
+            // Hour labels
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                listOf(0, 4, 8, 12, 16, 20, 24).forEach { hour ->
+                    Text(
+                        text = "$hour",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // Live readout: updates inside the active window (T1's image-count pattern)
+            val updateCount = com.terrella.worlds.util.QuietTimeUtils.calculateImages(
+                start.value.toInt(),
+                end.value.toInt(),
+                s.refreshHours,
+            )
+            Text(
+                text = buildAnnotatedString {
+                    append("Terrella will update your wallpaper ")
+                    withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary)) {
+                        append("$updateCount ${if (updateCount == 1) "time" else "times"}")
+                    }
+                },
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = "Wallpapers only update between the slider handles to conserve energy and reduce cost.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
     SectionCard("Units") {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
