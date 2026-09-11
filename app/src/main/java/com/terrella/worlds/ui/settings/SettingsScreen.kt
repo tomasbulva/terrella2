@@ -56,6 +56,8 @@ fun SettingsScreen(
         Text("Settings", style = MaterialTheme.typography.headlineSmall)
         WeatherSection(s, settingsRepository, scope)
         WallpaperSection(s, settingsRepository, scope)
+        LocationsSection(s, settingsRepository, scope)
+        ExperienceSection(s, settingsRepository, scope)
         TelemetrySection(s, settingsRepository, scope)
         OutlinedButton(onClick = onNavigateToWorld, modifier = Modifier.fillMaxWidth()) {
             Text("Back to world")
@@ -193,6 +195,73 @@ private fun TelemetrySection(s: Settings, repo: SettingsRepository, scope: kotli
                 "batches every 6h, and contain a random install id — never ads, never third parties.",
             style = MaterialTheme.typography.bodySmall,
         )
+    }
+}
+
+
+@Composable
+private fun LocationsSection(s: Settings, repo: SettingsRepository, scope: kotlinx.coroutines.CoroutineScope) {
+    val context = LocalContext.current
+    SectionCard("Wallpaper refresh") {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Text("Every ${s.refreshHours}h", style = MaterialTheme.typography.bodyLarge)
+            Slider(
+                value = s.refreshHours.toFloat(),
+                onValueChange = { },
+                onValueChangeFinished = { scope.launch { repo.setRefreshHours(s.refreshHours) } },
+                valueRange = 1f..24f,
+                steps = 22,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp),
+            )
+        }
+        val sliderState = remember { mutableStateOf(s.refreshHours.toFloat()) }
+        Slider(
+            value = sliderState.value,
+            onValueChange = {
+                sliderState.value = it
+                scope.launch { repo.setRefreshHours(it.toInt()) }
+            },
+            valueRange = 1f..24f,
+            steps = 22,
+        )
+        OutlinedButton(onClick = {
+            scope.launch {
+                com.terrella.worlds.data.telemetry.Telemetry.event("wallpaper_refresh_manual")
+                androidx.work.WorkManager.getInstance(context).let { wm ->
+                    wm.enqueue(androidx.work.OneTimeWorkRequestBuilder<com.terrella.worlds.worker.WallpaperUpdateWorker>().build())
+                }
+            }
+        }) { Text("Update wallpaper now") }
+    }
+}
+
+@Composable
+private fun ExperienceSection(s: Settings, repo: SettingsRepository, scope: kotlinx.coroutines.CoroutineScope) {
+    SectionCard("Quiet time") {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Switch(checked = s.quietEnabled, onCheckedChange = { scope.launch { repo.setQuietEnabled(it) } })
+            Text("Pause updates between ${{ }}".replace("{}", "${s.quietStartHour}:00 – ${s.quietEndHour}:00"),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(start = 8.dp))
+        }
+        Text("Quiet hours: ${s.quietStartHour}:00 – ${s.quietEndHour}:00 (in-app tuning next release)", style = MaterialTheme.typography.bodySmall)
+    }
+    SectionCard("Units") {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Switch(checked = s.useMetric, onCheckedChange = { scope.launch { repo.setUseMetric(it) } })
+            Text(if (s.useMetric) "Metric (°C, km/h)" else "Imperial (°F, mph)",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(start = 8.dp))
+        }
+    }
+    SectionCard("Notifications") {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Switch(checked = s.notificationsEnabled, onCheckedChange = { scope.launch { repo.setNotificationsEnabled(it) } })
+            Text("World status in notifications", style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(start = 8.dp))
+        }
     }
 }
 
