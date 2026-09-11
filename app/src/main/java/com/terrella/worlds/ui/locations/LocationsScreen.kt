@@ -85,7 +85,7 @@ fun LocationsScreen(
     val locations by locationsRepository.locations.collectAsStateWithLifecycle(initialValue = emptyList())
     val settings by settingsRepository.settings.collectAsStateWithLifecycle(initialValue = null)
     val selectedId by locationsRepository.selectedLocationId.collectAsStateWithLifecycle(initialValue = null)
-    val s = settings
+    val s = settings ?: return
 
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -363,21 +363,17 @@ private fun AddLocationDialog(
         searching = true
         results = emptyList()
         kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
-            val found = runCatching {
+            val addresses: List<android.location.Address> = runCatching {
                 val geocoder = Geocoder(context, Locale.getDefault())
                 @Suppress("DEPRECATION")
                 geocoder.getFromLocationName(q, 5)
             }.getOrNull() ?: emptyList()
-                .mapNotNull { a ->
-                    runCatching {
-                        SavedLocation(
-                            name = a.locality ?: a.subAdminArea ?: a.adminArea ?: a.getAddressLine(0) ?: q,
-                            country = a.countryName ?: "",
-                            latitude = a.latitude,
-                            longitude = a.longitude,
-                        )
-                    }.getOrNull()
-                }
+            val found: List<SavedLocation> = addresses.mapNotNull { a ->
+                val name = a.locality ?: a.subAdminArea ?: a.adminArea ?: a.getAddressLine(0) ?: q
+                val country = a.countryName ?: ""
+                if (name.isBlank()) null
+                else SavedLocation(name = name, country = country, latitude = a.latitude, longitude = a.longitude)
+            }
             withContext(kotlinx.coroutines.Dispatchers.Main) {
                 results = found
                 searching = false
