@@ -4,8 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.terrella.worlds.ui.AppNavigation
 import com.terrella.worlds.ui.theme.TerrellaTheme
-import com.terrella.worlds.ui.world.WorldScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -13,7 +13,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             TerrellaTheme {
-                WorldScreen()
+                AppNavigation()
             }
         }
     }

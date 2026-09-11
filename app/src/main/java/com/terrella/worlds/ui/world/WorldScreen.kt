@@ -4,6 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,17 +19,28 @@ import io.github.sceneview.SceneView
 import io.github.sceneview.node.ModelNode
 import io.github.sceneview.rememberModelInstance
 
-/**
- * Spike v1: loads the optimized Amsterdam diorama (worlds/amsterdam.glb),
- * default orbit camera (drag to rotate, pinch to zoom).
- */
 @Composable
-fun WorldScreen(modifier: Modifier = Modifier) {
+fun WorldScreen(
+    modifier: Modifier = Modifier,
+    onNavigateToSettings: () -> Unit = {},
+) {
     Box(modifier = modifier.fillMaxSize()) {
         SceneView(modifier = Modifier.fillMaxSize()) {
             rememberModelInstance(modelLoader, "worlds/amsterdam.glb")?.let {
                 ModelNode(modelInstance = it, scaleToUnits = 1.0f)
             }
+        }
+        IconButton(
+            onClick = onNavigateToSettings,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(12.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Settings,
+                contentDescription = "Settings",
+                tint = Color.White,
+            )
         }
         Text(
             text = "Terrella2 · Amsterdam diorama (spike)",
@@ -34,11 +49,8 @@ fun WorldScreen(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 32.dp)
-                .background(
-                    Color.Black.copy(alpha = 0.4f),
-                    MaterialTheme.shapes.large
-                )
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .background(Color.Black.copy(alpha = 0.4f), MaterialTheme.shapes.large)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         )
     }
 }
