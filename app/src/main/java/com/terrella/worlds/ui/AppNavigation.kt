@@ -5,6 +5,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.terrella.worlds.data.LocationsRepository
 import com.terrella.worlds.data.SettingsRepository
 import com.terrella.worlds.ui.locations.LocationsScreen
 import com.terrella.worlds.ui.settings.SettingsScreen
@@ -20,6 +21,7 @@ object Routes {
 fun AppNavigation() {
     val navController = rememberNavController()
     val settingsRepository = SettingsRepository.get(LocalContext.current)
+    val locationsRepository = LocationsRepository.get(LocalContext.current)
 
     NavHost(navController = navController, startDestination = Routes.WORLD) {
         composable(Routes.WORLD) {
