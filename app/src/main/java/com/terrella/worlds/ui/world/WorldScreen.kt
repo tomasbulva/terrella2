@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -23,6 +24,7 @@ import io.github.sceneview.rememberModelInstance
 fun WorldScreen(
     modifier: Modifier = Modifier,
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToLocations: () -> Unit = {},
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         SceneView(modifier = Modifier.fillMaxSize()) {
@@ -30,17 +32,25 @@ fun WorldScreen(
                 ModelNode(modelInstance = it, scaleToUnits = 1.0f)
             }
         }
-        IconButton(
-            onClick = onNavigateToSettings,
+        Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(12.dp),
         ) {
-            Icon(
-                imageVector = Icons.Filled.Settings,
-                contentDescription = "Settings",
-                tint = Color.White,
-            )
+            IconButton(onClick = onNavigateToLocations) {
+                Icon(
+                    imageVector = Icons.Filled.Place,
+                    contentDescription = "Places",
+                    tint = Color.White,
+                )
+            }
+            IconButton(onClick = onNavigateToSettings) {
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = "Settings",
+                    tint = Color.White,
+                )
+            }
         }
         Text(
             text = "Terrella2 · Amsterdam diorama (spike)",
