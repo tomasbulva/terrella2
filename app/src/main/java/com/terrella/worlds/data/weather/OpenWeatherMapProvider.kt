@@ -32,7 +32,7 @@ object OpenWeatherMapProvider : WeatherProvider {
         else -> Condition.CLOUDY
     }
 
-    private fun get(url: String): String = withContext(Dispatchers.IO) {
+    private suspend fun get(url: String): String = withContext(Dispatchers.IO) {
         val conn = URL(url).openConnection() as HttpURLConnection
         conn.connectTimeout = 8000
         conn.readTimeout = 8000
