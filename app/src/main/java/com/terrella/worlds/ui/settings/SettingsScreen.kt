@@ -91,6 +91,7 @@ fun SettingsScreen(
                 .statusBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Spacer(Modifier.height(8.dp))
             Row(
@@ -149,23 +150,24 @@ private fun WeatherSection(s: Settings, repo: SettingsRepository, scope: kotlinx
 
 @Composable
 private fun WeatherTestRow(s: Settings, repo: SettingsRepository) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var result by remember { mutableStateOf<String?>(null) }
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-        OutlinedButton(onClick = {
-            scope.launch {
-                result = runCatching {
-                    val snap = WeatherProviders.byId(s.weatherProviderId)
-                        .current(52.37, 4.89, s.owmApiKey.ifBlank { null })
-                    "${snap.condition} · ${snap.tempC}°C · wind ${snap.windKmh} km/h · ${if (snap.isDay) "day" else "night"}"
-                }.getOrElse { "Error: ${it.message}" }
-            }
-        }) { Text("Test fetch (Amsterdam)") }
-        result?.let {
-            Spacer(Modifier.height(4.dp))
-            Text(it, style = MaterialTheme.typography.bodySmall)
+    var testing by remember { mutableStateOf(false) }
+    OutlinedButton(onClick = {
+        if (testing) return@OutlinedButton
+        testing = true
+        scope.launch {
+            runCatching {
+                val snap = WeatherProviders.byId(s.weatherProviderId)
+                    .current(52.37, 4.89, s.owmApiKey.ifBlank { null })
+                "${snap.condition.name.lowercase().replace('_', ' ')} · ${snap.tempC}°C · wind ${snap.windKmh} km/h · ${if (snap.isDay) "day" else "night"}"
+            }.fold(
+                onSuccess = { com.terrella.worlds.util.Toasts.show(context, it) },
+                onFailure = { com.terrella.worlds.util.Toasts.show(context, "Weather fetch failed: ${it.message}") },
+            )
+            testing = false
         }
-    }
+    }, enabled = !testing) { Text(if (testing) "Fetching…" else "Test fetch (Amsterdam)") }
 }
 
 @Composable

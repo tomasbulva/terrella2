@@ -154,16 +154,22 @@ fun LocationsScreen(
     val dayBmp = remember { decodeAsset(context, "wallpapers/diorama_day.jpg") }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = Color.Transparent,
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
                 Icon(Icons.Filled.Add, contentDescription = "Add location")
             }
         },
     ) { padding ->
+        Box(Modifier.padding(padding).fillMaxSize()) {
+        Image(
+            bitmap = ((nightBmp ?: dayBmp) ?: return@Box).asImageBitmap(),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+        )
         Column(
             Modifier
-                .padding(padding)
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
         ) {
@@ -258,6 +264,7 @@ fun LocationsScreen(
                 }
             }
         }
+        }
     }
 
     if (showAddDialog) {
@@ -265,8 +272,16 @@ fun LocationsScreen(
             onDismiss = { showAddDialog = false },
             onAdd = { loc ->
                 scope.launch {
-                    locationsRepository.addLocation(loc)
-                    Telemetry.event("location_added", mapOf("source" to "search"))
+                    runCatching { locationsRepository.addLocation(loc) }
+                        .fold(
+                            onSuccess = {
+                                Telemetry.event("location_added", mapOf("source" to "search"))
+                                com.terrella.worlds.util.Toasts.show(context, "${loc.name} added")
+                            },
+                            onFailure = {
+                                com.terrella.worlds.util.Toasts.show(context, "Couldn't add place: ${it.message}")
+                            },
+                        )
                 }
                 showAddDialog = false
             },

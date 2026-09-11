@@ -33,7 +33,9 @@ fun AppNavigation() {
         }
         composable(Routes.LOCATIONS) {
             LocationsScreen(
-                onNavigateToWorld = { navController.popBackStack() },
+                onNavigateToWorld = { id ->
+                    navController.navigate("${Routes.WORLD}?locationId=$id")
+                },
                 onNavigateToSettings = { navController.navigate(Routes.SETTINGS) },
                 locationsRepository = locationsRepository,
                 settingsRepository = settingsRepository,
@@ -41,7 +43,7 @@ fun AppNavigation() {
         }
         composable(Routes.SETTINGS) {
             SettingsScreen(
-                onNavigateToWorld = { navController.popBackStack() },
+                onNavigateToWorld = { navController.popBackStack(Routes.LOCATIONS, inclusive = false) },
                 settingsRepository = settingsRepository,
             )
         }
