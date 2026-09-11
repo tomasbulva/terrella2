@@ -9,9 +9,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Straighten
+import androidx.compose.material.icons.filled.Title
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -338,16 +348,6 @@ private fun ExperienceSection(s: Settings, repo: SettingsRepository, scope: kotl
             Switch(checked = s.showTitleInImage, onCheckedChange = { scope.launch { repo.setShowTitleInImage(it) } })
             Text(
                 "Show the place name in the diorama",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(start = 8.dp),
-            )
-        }
-    }
-   SectionCard("Notifications") {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            Switch(checked = s.notificationsEnabled, onCheckedChange = { scope.launch { repo.setNotificationsEnabled(it) } })
-            Text(
-                "World status in notifications",
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(start = 8.dp),
             )
