@@ -10,4 +10,9 @@ data class SavedLocation(
     val latitude: Double,
     val longitude: Double,
     val timezone: String = "",
-)
+    val isCurrent: Boolean = false,
+) {
+    companion object {
+        const val CURRENT_ID = "current-location"
+    }
+}

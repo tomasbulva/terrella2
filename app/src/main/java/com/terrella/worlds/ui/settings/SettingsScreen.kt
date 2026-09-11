@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -30,6 +32,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -135,7 +138,7 @@ private fun WeatherTestRow(s: Settings, repo: SettingsRepository) {
 @Composable
 private fun WallpaperSection(s: Settings, repo: SettingsRepository, scope: kotlinx.coroutines.CoroutineScope) {
     val context = LocalContext.current
-    val modes = listOf("static" to "Static image", "video" to "Live video (looping)", "off" to "None")
+    val modes = listOf("video" to "Live video (looping)", "static" to "Static image")
     SectionCard("Wallpaper") {
         modes.forEach { (id, label) ->
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
@@ -151,18 +154,11 @@ private fun WallpaperSection(s: Settings, repo: SettingsRepository, scope: kotli
                 Text(label, style = MaterialTheme.typography.bodyLarge)
             }
         }
-        if (s.wallpaperMode == "static") {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = {
-                    val r = WallpaperInstaller.setStatic(context, "diorama_night.jpg")
-                    TelemetryBridge.event("wallpaper_set", mapOf("kind" to "static_night"))
-                }) { Text("Night city") }
-                Button(onClick = {
-                    val r = WallpaperInstaller.setStatic(context, "diorama_day.jpg")
-                    TelemetryBridge.event("wallpaper_set", mapOf("kind" to "static_day"))
-                }) { Text("Day city") }
-            }
-        }
+        Text(
+            "Diorama imagery follows each place automatically: local time of day and live weather decide day or night.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         if (s.wallpaperMode == "video") {
             LiveWallpaperButton()
         }
@@ -234,13 +230,13 @@ private fun LocationsSection(s: Settings, repo: SettingsRepository, scope: kotli
 
 @Composable
 private fun ExperienceSection(s: Settings, repo: SettingsRepository, scope: kotlinx.coroutines.CoroutineScope) {
-    SectionCard("Quiet time") {
+    SectionCard("Quiet time", icon = Icons.Filled.Bedtime) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text("Quiet time", style = MaterialTheme.typography.titleMedium)
+            Text("Enabled", style = MaterialTheme.typography.bodyLarge)
             Switch(
                 checked = s.quietEnabled,
                 onCheckedChange = { scope.launch { repo.setQuietEnabled(it) } },
@@ -322,17 +318,32 @@ private fun ExperienceSection(s: Settings, repo: SettingsRepository, scope: kotl
             )
         }
     }
-    SectionCard("Units") {
+    SectionCard("Units", icon = Icons.Filled.Straighten) {
+        listOf(true to "Metric (°C, km/h)", false to "Imperial (°F, mph)").forEach { (metric, label) ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                RadioButton(
+                    selected = s.useMetric == metric,
+                    onClick = { scope.launch { repo.setUseMetric(metric) } },
+                )
+                Text(label, style = MaterialTheme.typography.bodyLarge)
+            }
+        }
+    }
+    ArtStyleSection(s, repo, scope)
+    SectionCard("Title in image", icon = Icons.Filled.Title) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            Switch(checked = s.useMetric, onCheckedChange = { scope.launch { repo.setUseMetric(it) } })
+            Switch(checked = s.showTitleInImage, onCheckedChange = { scope.launch { repo.setShowTitleInImage(it) } })
             Text(
-                if (s.useMetric) "Metric (°C, km/h)" else "Imperial (°F, mph)",
+                "Show the place name in the diorama",
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(start = 8.dp),
             )
         }
     }
-    SectionCard("Notifications") {
+   SectionCard("Notifications") {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Switch(checked = s.notificationsEnabled, onCheckedChange = { scope.launch { repo.setNotificationsEnabled(it) } })
             Text(
@@ -344,11 +355,89 @@ private fun ExperienceSection(s: Settings, repo: SettingsRepository, scope: kotl
     }
 }
 
+
+private data class ArtStyleOption(val id: String, val name: String, val tagline: String, val imageRes: Int)
+
+private val ART_STYLES = listOf(
+    ArtStyleOption("original", "Original", "Clean & minimal", com.terrella.worlds.R.drawable.art_style_original),
+    ArtStyleOption("video_game", "Video Game", "Action packed", com.terrella.worlds.R.drawable.art_style_video_game),
+    ArtStyleOption("lego", "Color Bricks", "Brick by brick", com.terrella.worlds.R.drawable.art_style_lego),
+    ArtStyleOption("trolls_claymation", "Glitter Claymation", "Glittery & fun", com.terrella.worlds.R.drawable.art_style_trolls_claymation),
+    ArtStyleOption("back_to_the_future", "Back to the 80's", "Retro futuristic", com.terrella.worlds.R.drawable.art_style_back_to_the_future),
+    ArtStyleOption("lord_of_the_ring", "Halfling Village", "Medieval fantasy", com.terrella.worlds.R.drawable.art_style_lord_of_the_ring),
+    ArtStyleOption("harry_potter", "Young Wizard", "Magical world", com.terrella.worlds.R.drawable.art_style_harry_potter),
+    ArtStyleOption("zombie_apocalypse", "Zombie Apocalypse", "Post-apocalyptic", com.terrella.worlds.R.drawable.art_style_zombie_apocalypse),
+    ArtStyleOption("plastic_dollhouse", "Plastic Dollhouse", "Toy world", com.terrella.worlds.R.drawable.art_style_isometric),
+)
+
 @Composable
-private fun SectionCard(title: String, content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
+private fun ArtStyleSection(s: Settings, repo: SettingsRepository, scope: kotlinx.coroutines.CoroutineScope) {
+    SectionCard("Art style", icon = Icons.Filled.Palette) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            ART_STYLES.forEach { style ->
+                val selected = s.artStyle == style.id
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .width(110.dp)
+                        .border(
+                            width = if (selected) 2.dp else 1.dp,
+                            color = if (selected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.outline,
+                            shape = RoundedCornerShape(12.dp),
+                        )
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable {
+                            scope.launch { repo.setArtStyle(style.id) }
+                            TelemetryBridge.event("art_style_changed", mapOf("style" to style.id))
+                        }
+                        .padding(6.dp),
+                ) {
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(style.imageRes),
+                        contentDescription = style.name,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    )
+                    Text(
+                        style.name,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    )
+                    Text(
+                        style.tagline,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    )
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun SectionCard(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
+) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                icon?.let { Icon(it, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+                Text(title, style = MaterialTheme.typography.titleMedium)
+            }
             content()
         }
     }

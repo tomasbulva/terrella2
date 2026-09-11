@@ -26,6 +26,7 @@ fun WorldScreen(
     modifier: Modifier = Modifier,
     onNavigateToSettings: () -> Unit = {},
     onNavigateToLocations: () -> Unit = {},
+    locationId: String? = null,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         SceneView(modifier = Modifier.fillMaxSize()) {

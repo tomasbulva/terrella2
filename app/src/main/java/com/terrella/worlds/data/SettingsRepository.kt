@@ -22,7 +22,8 @@ data class Settings(
     val quietStartHour: Int,
     val quietEndHour: Int,
     val useMetric: Boolean,
-    val notificationsEnabled: Boolean,
+    val artStyle: String,
+    val showTitleInImage: Boolean,
 )
 
 class SettingsRepository(private val context: Context) {
@@ -37,7 +38,8 @@ class SettingsRepository(private val context: Context) {
         val QUIET_START_HOUR = intPreferencesKey("quiet_start_hour")
         val QUIET_END_HOUR = intPreferencesKey("quiet_end_hour")
         val USE_METRIC = booleanPreferencesKey("use_metric")
-        val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
+        val ART_STYLE = stringPreferencesKey("art_style")
+        val SHOW_TITLE_IN_IMAGE = booleanPreferencesKey("show_title_in_image")
     }
 
     companion object {
@@ -56,14 +58,15 @@ class SettingsRepository(private val context: Context) {
         Settings(
             weatherProviderId = p[Keys.WEATHER_PROVIDER] ?: WEATHER_OPEN_METEO,
             owmApiKey = p[Keys.OWM_API_KEY] ?: "",
-            wallpaperMode = p[Keys.WALLPAPER_MODE] ?: "off",
+            wallpaperMode = p[Keys.WALLPAPER_MODE] ?: "video",
             telemetryEnabled = p[Keys.TELEMETRY_ENABLED] ?: true,
             refreshHours = p[Keys.REFRESH_HOURS] ?: 6,
             quietEnabled = p[Keys.QUIET_ENABLED] ?: false,
             quietStartHour = p[Keys.QUIET_START_HOUR] ?: 23,
             quietEndHour = p[Keys.QUIET_END_HOUR] ?: 7,
             useMetric = p[Keys.USE_METRIC] ?: true,
-            notificationsEnabled = p[Keys.NOTIFICATIONS_ENABLED] ?: true,
+            artStyle = p[Keys.ART_STYLE] ?: "original",
+            showTitleInImage = p[Keys.SHOW_TITLE_IN_IMAGE] ?: false,
         )
     }
 
@@ -78,5 +81,6 @@ class SettingsRepository(private val context: Context) {
     suspend fun setQuietStartHour(hour: Int) = context.dataStore.edit { it[Keys.QUIET_START_HOUR] = hour }
     suspend fun setQuietEndHour(hour: Int) = context.dataStore.edit { it[Keys.QUIET_END_HOUR] = hour }
     suspend fun setUseMetric(metric: Boolean) = context.dataStore.edit { it[Keys.USE_METRIC] = metric }
-    suspend fun setNotificationsEnabled(enabled: Boolean) = context.dataStore.edit { it[Keys.NOTIFICATIONS_ENABLED] = enabled }
+    suspend fun setArtStyle(style: String) = context.dataStore.edit { it[Keys.ART_STYLE] = style }
+    suspend fun setShowTitleInImage(show: Boolean) = context.dataStore.edit { it[Keys.SHOW_TITLE_IN_IMAGE] = show }
 }

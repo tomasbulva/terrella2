@@ -57,13 +57,11 @@ class WallpaperUpdateWorker(context: Context, params: WorkerParameters) : Corout
         val asset = pickAsset(snapshot.isDay, snapshot.condition)
         val applied = WallpaperHelper.decodeAndApply(applicationContext, asset)
 
-        if (settings.notificationsEnabled) {
-            NotificationHelper.showStatus(
-                applicationContext,
-                locationName = "${location.name}, ${location.country}".trim(' ', ','),
-                summary = "${snapshot.condition.name.lowercase().replace('_', ' ')} · ${snapshot.tempC}°C",
-            )
-        }
+        NotificationHelper.showStatus(
+            applicationContext,
+            locationName = "${location.name}, ${location.country}".trim(' ', ','),
+            summary = "${snapshot.condition.name.lowercase().replace('_', ' ')} · ${snapshot.tempC}°C",
+        )
 
         Telemetry.event(
             "wallpaper_refreshed",

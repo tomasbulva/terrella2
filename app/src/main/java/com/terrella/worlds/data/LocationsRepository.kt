@@ -51,6 +51,27 @@ class LocationsRepository(private val context: Context) {
 
     suspend fun select(id: String) = context.locationsStore.edit { it[Keys.SELECTED_ID] = id }
 
+    /** Upsert the GPS "current location" entry (single, stable id, not user-deletable). */
+    suspend fun upsertCurrentLocation(name: String, country: String, latitude: Double, longitude: Double) {
+        context.locationsStore.edit { p ->
+            val list = p[Keys.LOCATIONS]
+                ?.let { runCatching { json.decodeFromString<List<SavedLocation>>(it) }.getOrDefault(emptyList()) }
+                ?: emptyList()
+            val current = SavedLocation(
+                id = SavedLocation.CURRENT_ID,
+                name = name.ifBlank { "Current location" },
+                country = country,
+                latitude = latitude,
+                longitude = longitude,
+                isCurrent = true,
+            )
+            p[Keys.LOCATIONS] = json.encodeToString(
+                listOf(current) + list.filterNot { it.id == SavedLocation.CURRENT_ID }
+            )
+            if (p[Keys.SELECTED_ID] == null) p[Keys.SELECTED_ID] = SavedLocation.CURRENT_ID
+        }
+    }
+
     companion object {
         @Volatile private var instance: LocationsRepository? = null
         fun get(context: Context): LocationsRepository =

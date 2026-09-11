@@ -15,6 +15,6 @@ interface WeatherProvider {
 }
 
 object WeatherProviders {
-    val all: List<WeatherProvider> = listOf(OpenMeteoProvider, MetNoProvider, OpenWeatherMapProvider)
+    val all: List<WeatherProvider> = listOf(OpenMeteoProvider, MetNoProvider)
     fun byId(id: String): WeatherProvider = all.firstOrNull { it.id == id } ?: OpenMeteoProvider
 }

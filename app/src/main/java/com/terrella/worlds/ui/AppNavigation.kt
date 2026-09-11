@@ -23,11 +23,12 @@ fun AppNavigation() {
     val settingsRepository = SettingsRepository.get(LocalContext.current)
     val locationsRepository = LocationsRepository.get(LocalContext.current)
 
-    NavHost(navController = navController, startDestination = Routes.WORLD) {
-        composable(Routes.WORLD) {
+    NavHost(navController = navController, startDestination = Routes.LOCATIONS) {
+        composable("${Routes.WORLD}?locationId={locationId}") { backStackEntry ->
             WorldScreen(
                 onNavigateToSettings = { navController.navigate(Routes.SETTINGS) },
-                onNavigateToLocations = { navController.navigate(Routes.LOCATIONS) },
+                onNavigateToLocations = { navController.popBackStack() },
+                locationId = backStackEntry.arguments?.getString("locationId"),
             )
         }
         composable(Routes.LOCATIONS) {
