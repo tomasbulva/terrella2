@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -42,7 +43,10 @@ class LocationsRepository(private val context: Context) {
             ?.let { runCatching { json.decodeFromString<List<SavedLocation>>(it) }.getOrDefault(emptyList()) }
             ?: emptyList()
         p[Keys.LOCATIONS] = json.encodeToString(list.filterNot { it.id == id })
-        if (p[Keys.SELECTED_ID] == id) p[Keys.SELECTED_ID] = list.firstOrNull { it.id != id }?.id
+        if (p[Keys.SELECTED_ID] == id) {
+            val next = list.firstOrNull { it.id != id }?.id
+            if (next != null) p[Keys.SELECTED_ID] = next else p.remove(Keys.SELECTED_ID)
+        }
     }
 
     suspend fun select(id: String) = context.locationsStore.edit { it[Keys.SELECTED_ID] = id }

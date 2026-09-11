@@ -3,6 +3,7 @@ package com.terrella.worlds.wallpaper
 import android.app.WallpaperManager
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Point
 import android.util.DisplayMetrics
 import android.view.WindowManager
