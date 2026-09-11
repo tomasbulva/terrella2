@@ -82,9 +82,9 @@ fun LocationsScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val locations by locationsRepository.locations.collectAsStateWithLifecycle()
-    val settings by settingsRepository.settings.collectAsStateWithLifecycle()
-    val selectedId by locationsRepository.selectedLocationId.collectAsStateWithLifecycle()
+    val locations by locationsRepository.locations.collectAsStateWithLifecycle(initialValue = emptyList())
+    val settings by settingsRepository.settings.collectAsStateWithLifecycle(initialValue = null)
+    val selectedId by locationsRepository.selectedLocationId.collectAsStateWithLifecycle(initialValue = null)
     val s = settings
 
     var showAddDialog by remember { mutableStateOf(false) }
@@ -367,7 +367,7 @@ private fun AddLocationDialog(
                 val geocoder = Geocoder(context, Locale.getDefault())
                 @Suppress("DEPRECATION")
                 geocoder.getFromLocationName(q, 5)
-            }.getOrDefault(emptyList())
+            }.getOrNull() ?: emptyList()
                 .mapNotNull { a ->
                     runCatching {
                         SavedLocation(
