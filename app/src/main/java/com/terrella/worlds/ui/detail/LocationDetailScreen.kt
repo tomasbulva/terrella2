@@ -2,6 +2,7 @@ package com.terrella.worlds.ui.detail
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -43,12 +44,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.terrella.worlds.R
 import com.terrella.worlds.data.LocationsRepository
 import com.terrella.worlds.data.SavedLocation
 import com.terrella.worlds.data.SettingsRepository
@@ -92,55 +94,60 @@ fun LocationDetailScreen(
         }.getOrNull()?.let { weather = it }
     }
 
-    val nightBmp = remember { decodeAssetB(context, "wallpapers/diorama_night.jpg") }
-    val dayBmp = remember { decodeAssetB(context, "wallpapers/diorama_day.jpg") }
-    val backdrop = if (weather?.isDay == false) nightBmp else dayBmp
+    val isCurrentSelected = location?.id != null && location.id == selectedId
 
-    // Apply-current-type action: the big button and the menu item do the same thing.
-    fun applyWallpaper() {
+    fun applyOrUnsetWallpaper() {
         val loc = location ?: return
         scope.launch {
             rendering = true
-            if (s.wallpaperType == "static") {
-                val asset = if (weather?.isDay == false) "diorama_night.jpg" else "diorama_day.jpg"
-                val result = WallpaperInstaller.setStatic(context, asset)
-                Toasts.show(
-                    context,
-                    if (result is com.terrella.worlds.wallpaper.WallpaperInstaller.Result.Ok)
-                        "Static wallpaper set (${asset.removeSuffix(".jpg")})"
-                    else "Couldn't set wallpaper: ${(result as com.terrella.worlds.wallpaper.WallpaperInstaller.Result.Error).message}"
-                )
+            if (isCurrentSelected) {
+                // Unset wallpaper / unselect active location
+                locationsRepository.select("")
+                WallpaperInstaller.clear(context)
+                Toasts.show(context, "Wallpaper unset")
+                Telemetry.event("wallpaper_unset", mapOf("location" to loc.name))
             } else {
-                Toasts.show(context, "Live wallpaper is active (system default)")
+                locationsRepository.select(loc.id)
+                if (s.wallpaperType == "static") {
+                    val asset = if (weather?.isDay == false) "diorama_night.jpg" else "diorama_day.jpg"
+                    val result = WallpaperInstaller.setStatic(context, asset)
+                    Toasts.show(
+                        context,
+                        if (result is WallpaperInstaller.Result.Ok)
+                            "Static wallpaper set for ${loc.name}"
+                        else "Couldn't set wallpaper: ${(result as WallpaperInstaller.Result.Error).message}"
+                    )
+                } else {
+                    Toasts.show(context, "Active location set to ${loc.name}")
+                }
+                Telemetry.event("wallpaper_applied", mapOf("type" to s.wallpaperType, "location" to loc.name))
             }
-            Telemetry.event("wallpaper_applied", mapOf("type" to s.wallpaperType, "location" to loc.name))
             rendering = false
         }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Full-screen diorama backdrop
-        backdrop?.let { bmp ->
-            androidx.compose.foundation.Image(
-                bitmap = bmp.asImageBitmap(),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Black.copy(alpha = 0.45f), Color.Transparent, Color.Black.copy(alpha = 0.55f))
-                        )
-                    )
-            )
-        } ?: Box(
+        // Full-screen theme background
+        Image(
+            painter = painterResource(id = R.drawable.app_background),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+        )
+
+        // 3D Diorama View in center
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        )
+                .padding(top = 80.dp, bottom = 120.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Diorama3DView(
+                modelPath = "models/prague_wizard.glb",
+                weather = weather,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
 
         Column(
             modifier = Modifier
@@ -180,7 +187,6 @@ fun LocationDetailScreen(
                                 showMenu = false
                                 rendering = true
                                 scope.launch {
-                                    // Fresh weather fetch + re-apply current wallpaper type
                                     val loc = location
                                     val snap = loc?.let {
                                         runCatching {
@@ -188,16 +194,16 @@ fun LocationDetailScreen(
                                         }.getOrNull()
                                     }
                                     if (snap != null) weather = snap
-                                    applyWallpaper()
+                                    applyOrUnsetWallpaper()
                                     rendering = false
                                 }
                             },
                         )
                         DropdownMenuItem(
-                            text = { Text("Use as Wallpaper") },
+                            text = { Text(if (isCurrentSelected) "Unset wallpaper" else "Use as Wallpaper") },
                             onClick = {
                                 showMenu = false
-                                applyWallpaper()
+                                applyOrUnsetWallpaper()
                             },
                         )
                         DropdownMenuItem(
@@ -216,12 +222,13 @@ fun LocationDetailScreen(
                 val temp = if (s.useMetric) "${w.tempC.roundToInt()}°C" else "${(w.tempC * 9 / 5 + 32).roundToInt()}°F"
                 Box(
                     modifier = Modifier
-                        .padding(top = 8.dp)
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 4.dp)
                         .background(Color.Black.copy(alpha = 0.45f), RoundedCornerShape(20.dp))
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
                 ) {
                     Text(
-                        "${temp}  ${w.condition.name.lowercase().replace('_', ' ')}",
+                        "${temp} · ${w.condition.name.lowercase().replace('_', ' ')}",
                         color = Color.White,
                         style = MaterialTheme.typography.labelLarge,
                     )
@@ -230,26 +237,29 @@ fun LocationDetailScreen(
 
             Spacer(Modifier.weight(1f))
 
-            // ── Big apply button ──
+            // ── Large Circular Action Button ──
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 if (rendering) {
                     CircularProgressIndicator(color = Color.White)
                 } else {
+                    val buttonColor = if (isCurrentSelected) Color(0xFFE53935) else MaterialTheme.colorScheme.primary
+                    val buttonIcon = if (isCurrentSelected) Icons.Filled.Close else Icons.Filled.Check
                     Box(
                         modifier = Modifier
                             .size(72.dp)
-                            .background(MaterialTheme.colorScheme.primary, CircleShape)
-                            .clickable { applyWallpaper() },
+                            .background(buttonColor, CircleShape)
+                            .clickable { applyOrUnsetWallpaper() },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
+                        Icon(buttonIcon, contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
                     }
                 }
             }
             Text(
-                "SET AS ACTIVE",
+                if (isCurrentSelected) "UNSET WALLPAPER" else "SET AS ACTIVE",
                 color = Color.White,
                 style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
                 letterSpacing = 2.sp,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -259,7 +269,3 @@ fun LocationDetailScreen(
         }
     }
 }
-
-private fun decodeAssetB(context: android.content.Context, path: String): android.graphics.Bitmap? = runCatching {
-    BitmapFactory.decodeStream(context.assets.open(path))
-}.getOrNull()
