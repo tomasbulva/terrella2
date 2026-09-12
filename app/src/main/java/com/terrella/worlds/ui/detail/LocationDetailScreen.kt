@@ -21,13 +21,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Air
-import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -47,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -119,6 +117,10 @@ fun LocationDetailScreen(
         Pair(timeFmt.format(cal.time), dateFmt.format(cal.time))
     }
 
+    val nightBmp = remember { decodeAssetB(context, "wallpapers/diorama_night.jpg") }
+    val dayBmp = remember { decodeAssetB(context, "wallpapers/diorama_day.jpg") }
+    val backdrop = if (weather?.isDay == false) nightBmp else dayBmp
+
     fun applyOrUnsetWallpaper() {
         val loc = location ?: return
         scope.launch {
@@ -146,19 +148,41 @@ fun LocationDetailScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Full-screen theme background
-        Image(
-            painter = painterResource(id = R.drawable.app_background),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop,
-        )
+        // ── 1. Dynamic Diorama Background (Day / Night lighted city) ──
+        if (backdrop != null) {
+            Image(
+                bitmap = backdrop.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Black.copy(alpha = 0.40f),
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.60f)
+                            )
+                        )
+                    )
+            )
+        } else {
+            Image(
+                painter = painterResource(id = R.drawable.app_background),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+        }
 
-        // 3D Diorama View with dynamic NOAA sun calculation & lighting
+        // ── 2. 3D Diorama View in center ──
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 130.dp, bottom = 120.dp),
+                .padding(top = 110.dp, bottom = 120.dp),
             contentAlignment = Alignment.Center
         ) {
             Diorama3DView(
@@ -175,12 +199,13 @@ fun LocationDetailScreen(
             )
         }
 
+        // ── 3. Top / Bottom HUD UI ──
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding(),
         ) {
-            // ── Top bar: back | name + country | 3-dot menu ──
+            // Top bar: back | name + country | 3-dot menu
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -243,7 +268,7 @@ fun LocationDetailScreen(
                 }
             }
 
-            // ── Live Weather, Time & Date HUD Overlay ──
+            // Live Weather, Time & Date HUD Overlay
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -303,7 +328,7 @@ fun LocationDetailScreen(
 
             Spacer(Modifier.weight(1f))
 
-            // ── Large Circular Action Button ──
+            // Large Circular Action Button
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 if (rendering) {
                     CircularProgressIndicator(color = Color.White)
@@ -335,3 +360,7 @@ fun LocationDetailScreen(
         }
     }
 }
+
+private fun decodeAssetB(context: android.content.Context, path: String): android.graphics.Bitmap? = runCatching {
+    BitmapFactory.decodeStream(context.assets.open(path))
+}.getOrNull()
