@@ -1,16 +1,39 @@
 package com.terrella.worlds.ui.detail
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.terrella.worlds.data.SavedLocation
 import com.terrella.worlds.data.weather.Condition
 import com.terrella.worlds.data.weather.WeatherSnapshot
 import com.terrella.worlds.util.SunriseSunsetCalculator
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.SceneView
-import io.github.sceneview.math.Color
+import io.github.sceneview.math.Color as SceneColor
 import io.github.sceneview.node.ModelNode
 import io.github.sceneview.rememberEngine
 import io.github.sceneview.rememberFillLightNode
@@ -24,9 +47,9 @@ import kotlin.math.sin
 
 data class SolarLighting(
     val direction: Float3,
-    val color: Color,
+    val color: SceneColor,
     val intensity: Float,
-    val ambientColor: Color,
+    val ambientColor: SceneColor,
     val ambientIntensity: Float
 )
 
@@ -87,23 +110,23 @@ object SolarLightingEngine {
         return when {
             !isDay -> SolarLighting(
                 direction = sunDir,
-                color = Color(0.60f, 0.70f, 0.95f), // Clear moonlight
+                color = SceneColor(0.60f, 0.70f, 0.95f), // Clear moonlight
                 intensity = 50_000f * weatherDimming,
-                ambientColor = Color(0.40f, 0.45f, 0.65f),
+                ambientColor = SceneColor(0.40f, 0.45f, 0.65f),
                 ambientIntensity = 30_000f * weatherDimming
             )
             isDawnDusk -> SolarLighting(
                 direction = sunDir,
-                color = Color(1.0f, 0.75f, 0.50f), // Golden hour amber
+                color = SceneColor(1.0f, 0.75f, 0.50f), // Golden hour amber
                 intensity = 80_000f * weatherDimming,
-                ambientColor = Color(0.60f, 0.50f, 0.60f),
+                ambientColor = SceneColor(0.60f, 0.50f, 0.60f),
                 ambientIntensity = 35_000f * weatherDimming
             )
             else -> SolarLighting(
                 direction = sunDir,
-                color = Color(1.0f, 0.98f, 0.95f), // Daylight
+                color = SceneColor(1.0f, 0.98f, 0.95f), // Daylight
                 intensity = 100_000f * weatherDimming,
-                ambientColor = Color(0.65f, 0.75f, 0.88f),
+                ambientColor = SceneColor(0.65f, 0.75f, 0.88f),
                 ambientIntensity = 45_000f * weatherDimming
             )
         }
@@ -122,26 +145,67 @@ fun Diorama3DView(
         SolarLightingEngine.calculate(location, weather)
     }
 
-    SceneView(
-        modifier = modifier.fillMaxSize(),
-        engine = engine,
-        mainLightNode = rememberMainLightNode(engine) {
-            color = lighting.color
-            intensity = lighting.intensity
-            lightDirection = lighting.direction
-            isShadowCaster = true
-        },
-        fillLightNode = rememberFillLightNode(engine) {
-            color = lighting.ambientColor
-            intensity = lighting.ambientIntensity
-            isShadowCaster = false
+    var isModelReady by remember(modelPath) { mutableStateOf(false) }
+
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        SceneView(
+            modifier = Modifier.fillMaxSize(),
+            engine = engine,
+            mainLightNode = rememberMainLightNode(engine) {
+                color = lighting.color
+                intensity = lighting.intensity
+                lightDirection = lighting.direction
+                isShadowCaster = true
+            },
+            fillLightNode = rememberFillLightNode(engine) {
+                color = lighting.ambientColor
+                intensity = lighting.ambientIntensity
+                isShadowCaster = false
+            }
+        ) {
+            val modelInstance = rememberModelInstance(modelLoader, modelPath)
+            if (modelInstance != null) {
+                isModelReady = true
+                ModelNode(
+                    modelInstance = modelInstance,
+                    scaleToUnits = 1.0f
+                )
+            }
         }
-    ) {
-        rememberModelInstance(modelLoader, modelPath)?.let { modelInstance ->
-            ModelNode(
-                modelInstance = modelInstance,
-                scaleToUnits = 1.0f
-            )
+
+        // ── Smooth Diorama Loading Animation Overlay ──
+        AnimatedVisibility(
+            visible = !isModelReady,
+            enter = fadeIn(),
+            exit = fadeOut(animationSpec = tween(durationMillis = 500))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.55f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .background(Color(0xFF161C24).copy(alpha = 0.85f), shape = CircleShape)
+                        .padding(horizontal = 24.dp, vertical = 20.dp)
+                ) {
+                    CircularProgressIndicator(
+                        color = Color(0xFF64B5F6),
+                        strokeWidth = 3.dp,
+                        modifier = Modifier.size(36.dp)
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        "Rendering diorama…",
+                        color = Color.White.copy(alpha = 0.9f),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
+                        letterSpacing = 0.5.sp
+                    )
+                }
+            }
         }
     }
 }

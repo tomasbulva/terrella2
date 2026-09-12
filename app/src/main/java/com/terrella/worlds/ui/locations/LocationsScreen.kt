@@ -61,8 +61,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
 import com.terrella.worlds.R
 import com.terrella.worlds.data.LocationsRepository
 import com.terrella.worlds.data.SavedLocation
@@ -70,9 +68,9 @@ import com.terrella.worlds.data.SettingsRepository
 import com.terrella.worlds.data.telemetry.Telemetry
 import com.terrella.worlds.data.weather.WeatherProviders
 import com.terrella.worlds.data.weather.WeatherSnapshot
+import com.terrella.worlds.location.LocationProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -97,17 +95,15 @@ fun LocationsScreen(
     val manualLocations = locations.filterNot { it.isCurrent }
     val currentLocation = locations.firstOrNull { it.isCurrent }
 
-    // ---- Auto-detect current location on entry (permission-aware) ----
+    // ---- Auto-detect current location on entry (aggressive PRIORITY_HIGH_ACCURACY) ----
     fun fetchCurrent() {
         if (locating) return
         locating = true
         scope.launch {
-            val pos = runCatching {
-                val client = LocationServices.getFusedLocationProviderClient(context)
-                client.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null).await()
-            }.getOrNull()
+            val result = LocationProvider.getCurrentLocation(context)
+            val pos = result.getOrNull()
             if (pos != null) {
-                val loc = reverseGeocode(context, pos)
+                val loc = LocationProvider.reverseGeocode(context, pos.latitude, pos.longitude)
                 locationsRepository.upsertCurrentLocation(
                     name = loc?.first ?: "Current location",
                     country = loc?.second ?: "",
@@ -127,7 +123,7 @@ fun LocationsScreen(
 
     LaunchedEffect(Unit) {
         if (currentLocation == null && !locating) {
-            if (hasLocationPermission(context)) fetchCurrent()
+            if (LocationProvider.hasPermission(context)) fetchCurrent()
             else permissionLauncher.launch(
                 arrayOf(
                     android.Manifest.permission.ACCESS_FINE_LOCATION,
@@ -287,25 +283,6 @@ fun LocationsScreen(
             },
         )
     }
-}
-
-private fun hasLocationPermission(context: android.content.Context): Boolean =
-    androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) ==
-        android.content.pm.PackageManager.PERMISSION_GRANTED ||
-        androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
-        android.content.pm.PackageManager.PERMISSION_GRANTED
-
-private suspend fun reverseGeocode(
-    context: android.content.Context,
-    pos: Location,
-): Pair<String, String>? = withContext(Dispatchers.IO) {
-    runCatching {
-        val geocoder = Geocoder(context, Locale.getDefault())
-        @Suppress("DEPRECATION")
-        val addresses = geocoder.getFromLocation(pos.latitude, pos.longitude, 1)
-        val a = addresses?.firstOrNull() ?: return@withContext null
-        (a.locality ?: a.subAdminArea ?: a.adminArea ?: "Current location") to (a.countryName ?: "")
-    }.getOrNull()
 }
 
 @Composable
