@@ -16,14 +16,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Air
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -43,7 +47,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -61,6 +64,11 @@ import com.terrella.worlds.data.weather.WeatherSnapshot
 import com.terrella.worlds.util.Toasts
 import com.terrella.worlds.wallpaper.WallpaperInstaller
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import kotlin.math.roundToInt
 
 @Composable
@@ -99,6 +107,16 @@ fun LocationDetailScreen(
 
     val dioramaStyle = remember(location, s.artStyle) {
         DioramaRegistry.getStyleForLocation(location, s.artStyle)
+    }
+
+    // Dynamic local time & date computation for the selected place
+    val localTimeAndDate = remember(location?.timezone) {
+        val tz = location?.timezone?.ifBlank { null }?.let { runCatching { TimeZone.getTimeZone(it) }.getOrNull() }
+            ?: TimeZone.getDefault()
+        val cal = Calendar.getInstance(tz)
+        val timeFmt = SimpleDateFormat("HH:mm", Locale.getDefault()).apply { timeZone = tz }
+        val dateFmt = SimpleDateFormat("EEE, MMM d", Locale.getDefault()).apply { timeZone = tz }
+        Pair(timeFmt.format(cal.time), dateFmt.format(cal.time))
     }
 
     fun applyOrUnsetWallpaper() {
@@ -140,7 +158,7 @@ fun LocationDetailScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 80.dp, bottom = 120.dp),
+                .padding(top = 130.dp, bottom = 120.dp),
             contentAlignment = Alignment.Center
         ) {
             Diorama3DView(
@@ -225,21 +243,61 @@ fun LocationDetailScreen(
                 }
             }
 
-            // ── Weather pill ──
-            weather?.let { w ->
-                val temp = if (s.useMetric) "${w.tempC.roundToInt()}°C" else "${(w.tempC * 9 / 5 + 32).roundToInt()}°F"
-                Box(
+            // ── Live Weather, Time & Date HUD Overlay ──
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Time & Date Capsule
+                Row(
                     modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(top = 4.dp)
                         .background(Color.Black.copy(alpha = 0.45f), RoundedCornerShape(20.dp))
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Icon(Icons.Filled.Schedule, contentDescription = null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(4.dp))
                     Text(
-                        "${temp} · ${w.condition.name.lowercase().replace('_', ' ')}",
+                        localTimeAndDate.first,
                         color = Color.White,
-                        style = MaterialTheme.typography.labelLarge,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold
                     )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "·",
+                        color = Color.White.copy(alpha = 0.5f),
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        localTimeAndDate.second,
+                        color = Color.White.copy(alpha = 0.85f),
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+
+                Spacer(Modifier.width(8.dp))
+
+                // Weather Condition & Temp Capsule
+                weather?.let { w ->
+                    val temp = if (s.useMetric) "${w.tempC.roundToInt()}°C" else "${(w.tempC * 9 / 5 + 32).roundToInt()}°F"
+                    Row(
+                        modifier = Modifier
+                            .background(Color.Black.copy(alpha = 0.45f), RoundedCornerShape(20.dp))
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "${temp} · ${w.condition.name.lowercase().replace('_', ' ')}",
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
 
