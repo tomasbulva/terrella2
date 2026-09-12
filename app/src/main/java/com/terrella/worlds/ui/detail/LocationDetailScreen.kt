@@ -51,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.terrella.worlds.R
+import com.terrella.worlds.data.DioramaRegistry
 import com.terrella.worlds.data.LocationsRepository
 import com.terrella.worlds.data.SavedLocation
 import com.terrella.worlds.data.SettingsRepository
@@ -96,6 +97,10 @@ fun LocationDetailScreen(
 
     val isCurrentSelected = location?.id != null && location.id == selectedId
 
+    val dioramaStyle = remember(location, s.artStyle) {
+        DioramaRegistry.getStyleForLocation(location, s.artStyle)
+    }
+
     fun applyOrUnsetWallpaper() {
         val loc = location ?: return
         scope.launch {
@@ -139,7 +144,7 @@ fun LocationDetailScreen(
             contentAlignment = Alignment.Center
         ) {
             Diorama3DView(
-                modelPath = "models/prague_wizard.glb",
+                modelPath = dioramaStyle.modelAssetPath,
                 location = location,
                 weather = weather,
                 modifier = Modifier.fillMaxSize()
