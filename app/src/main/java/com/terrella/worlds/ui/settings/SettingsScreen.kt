@@ -19,7 +19,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.background
 import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Palette
@@ -435,6 +437,26 @@ private fun ArtStyleSection(s: Settings, repo: SettingsRepository, scope: kotlin
                 }
             }
         }
+    }
+}
+
+
+@Composable
+private fun TelemetrySection(s: Settings, repo: SettingsRepository, scope: kotlinx.coroutines.CoroutineScope) {
+    SectionCard("Usage tracking", icon = Icons.Filled.Public) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Switch(checked = s.telemetryEnabled, onCheckedChange = { scope.launch { repo.setTelemetryEnabled(it) } })
+            Text(
+                "Share anonymous usage events",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(start = 8.dp),
+            )
+        }
+        Text(
+            "Helps us learn which features you actually use. Events go only to our own server, " +
+                "batches every 6h, and contain a random install id — never ads, never third parties.",
+            style = MaterialTheme.typography.bodySmall,
+        )
     }
 }
 
