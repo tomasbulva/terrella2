@@ -12,7 +12,7 @@ object WallpaperInstaller {
     }
 
     /** Directly applies wallpaper to home and lock screen with display-fit cropping. */
-    fun setStatic(context: Context, assetName: String): Result = runCatching {
+    suspend fun setStatic(context: Context, assetName: String): Result = runCatching {
         WallpaperHelper.decodeAndApply(context, assetName).getOrThrow()
         Result.Ok
     }.getOrElse { Result.Error(it.message ?: "failed to set wallpaper") }

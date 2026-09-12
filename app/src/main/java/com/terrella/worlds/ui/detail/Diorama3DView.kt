@@ -23,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -35,11 +34,15 @@ import com.terrella.worlds.util.SunriseSunsetCalculator
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.SceneView
 import io.github.sceneview.math.Color as SceneColor
+import io.github.sceneview.math.Position
+import io.github.sceneview.math.Rotation
 import io.github.sceneview.node.ModelNode
+import io.github.sceneview.rememberCameraNode
 import io.github.sceneview.rememberEngine
 import io.github.sceneview.rememberFillLightNode
 import io.github.sceneview.rememberMainLightNode
 import io.github.sceneview.rememberModelInstance
+import io.github.sceneview.SurfaceType
 import java.util.Calendar
 import java.util.TimeZone
 import kotlin.math.PI
@@ -151,7 +154,15 @@ fun Diorama3DView(
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         SceneView(
             modifier = Modifier.fillMaxSize(),
+            surfaceType = SurfaceType.TextureSurface,
+            isOpaque = false,
             engine = engine,
+            cameraNode = rememberCameraNode(engine) {
+                // Fixed Isometric Perspective: looking down at 30 deg pitch, 45 deg yaw
+                position = Position(x = 1.8f, y = 1.5f, z = 1.8f)
+                rotation = Rotation(x = -30f, y = 45f, z = 0f)
+            },
+            cameraManipulator = null, // Locked camera angle for perfect isometric diorama framing
             mainLightNode = rememberMainLightNode(engine) {
                 color = lighting.color
                 intensity = lighting.intensity
