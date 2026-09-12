@@ -108,24 +108,15 @@ fun LocationDetailScreen(
                 Telemetry.event("wallpaper_unset", mapOf("location" to loc.name))
             } else {
                 locationsRepository.select(loc.id)
-                if (s.wallpaperType == "static") {
-                    val asset = if (weather?.isDay == false) "diorama_night.jpg" else "diorama_day.jpg"
-                    val result = WallpaperInstaller.setStatic(context, asset)
-                    Toasts.show(
-                        context,
-                        if (result is WallpaperInstaller.Result.Ok)
-                            "Static wallpaper set for ${loc.name}"
-                        else "Couldn't set wallpaper: ${(result as WallpaperInstaller.Result.Error).message}"
-                    )
-                } else {
-                    val pickerResult = WallpaperInstaller.launchLiveWallpaperPicker(context)
-                    if (pickerResult is WallpaperInstaller.Result.Ok) {
-                        Toasts.show(context, "Setting live wallpaper for ${loc.name}…")
-                    } else {
-                        Toasts.show(context, "Active location set to ${loc.name}")
-                    }
-                }
-                Telemetry.event("wallpaper_applied", mapOf("type" to s.wallpaperType, "location" to loc.name))
+                val asset = if (weather?.isDay == false) "diorama_night.jpg" else "diorama_day.jpg"
+                val result = WallpaperInstaller.setStatic(context, asset)
+                Toasts.show(
+                    context,
+                    if (result is WallpaperInstaller.Result.Ok)
+                        "Wallpaper set for ${loc.name}"
+                    else "Couldn't set wallpaper: ${(result as WallpaperInstaller.Result.Error).message}"
+                )
+                Telemetry.event("wallpaper_applied", mapOf("location" to loc.name))
             }
             rendering = false
         }

@@ -63,50 +63,48 @@ object SolarLightingEngine {
         }
 
         val sunAngleRad = solarProgress * PI.toFloat()
-        // Direction vector (pointing from light towards origin/scene):
-        // X traverses East to West (-cos), Y is solar elevation (sin), Z provides slight front isometric angle
         val sunDir = if (isDay) {
-            val elevation = sin(sunAngleRad).coerceAtLeast(0.15f)
+            val elevation = sin(sunAngleRad).coerceAtLeast(0.2f)
             val azimuth = -cos(sunAngleRad)
             Float3(azimuth * 0.7f, -elevation, -0.6f)
         } else {
-            // Cool moonlight from top-angled direction
+            // Moonlight from top-angled direction
             Float3(0.3f, -0.7f, -0.5f)
         }
 
         // Weather atmospheric dampening
         val weatherDimming = when (weather?.condition) {
             Condition.CLEAR -> 1.0f
-            Condition.PARTLY_CLOUDY -> 0.85f
-            Condition.CLOUDY -> 0.60f
-            Condition.FOG -> 0.45f
-            Condition.DRIZZLE, Condition.RAIN -> 0.50f
-            Condition.HEAVY_RAIN, Condition.THUNDER -> 0.35f
-            Condition.SNOW -> 0.70f
+            Condition.PARTLY_CLOUDY -> 0.90f
+            Condition.CLOUDY -> 0.75f
+            Condition.FOG -> 0.65f
+            Condition.DRIZZLE, Condition.RAIN -> 0.65f
+            Condition.HEAVY_RAIN, Condition.THUNDER -> 0.55f
+            Condition.SNOW -> 0.80f
             null -> 1.0f
         }
 
         return when {
             !isDay -> SolarLighting(
                 direction = sunDir,
-                color = Color(0.35f, 0.48f, 0.82f), // Deep mystical moonlight
-                intensity = 18_000f * weatherDimming,
-                ambientColor = Color(0.10f, 0.15f, 0.35f),
-                ambientIntensity = 5_000f * weatherDimming
+                color = Color(0.60f, 0.70f, 0.95f), // Clear moonlight
+                intensity = 50_000f * weatherDimming,
+                ambientColor = Color(0.40f, 0.45f, 0.65f),
+                ambientIntensity = 30_000f * weatherDimming
             )
             isDawnDusk -> SolarLighting(
                 direction = sunDir,
-                color = Color(1.0f, 0.68f, 0.42f), // Golden hour amber
-                intensity = 45_000f * weatherDimming,
-                ambientColor = Color(0.55f, 0.45f, 0.60f),
-                ambientIntensity = 12_000f * weatherDimming
+                color = Color(1.0f, 0.75f, 0.50f), // Golden hour amber
+                intensity = 80_000f * weatherDimming,
+                ambientColor = Color(0.60f, 0.50f, 0.60f),
+                ambientIntensity = 35_000f * weatherDimming
             )
             else -> SolarLighting(
                 direction = sunDir,
-                color = Color(1.0f, 0.98f, 0.92f), // Pure daylight
-                intensity = 70_000f * weatherDimming,
-                ambientColor = Color(0.50f, 0.65f, 0.85f),
-                ambientIntensity = 18_000f * weatherDimming
+                color = Color(1.0f, 0.98f, 0.95f), // Daylight
+                intensity = 100_000f * weatherDimming,
+                ambientColor = Color(0.65f, 0.75f, 0.88f),
+                ambientIntensity = 45_000f * weatherDimming
             )
         }
     }
