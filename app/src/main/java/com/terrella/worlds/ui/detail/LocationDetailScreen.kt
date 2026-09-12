@@ -135,7 +135,7 @@ fun LocationDetailScreen(
             contentScale = ContentScale.Crop,
         )
 
-        // 3D Diorama View in center with live weather effects overlay
+        // 3D Diorama View with dynamic NOAA sun calculation & lighting
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -144,6 +144,7 @@ fun LocationDetailScreen(
         ) {
             Diorama3DView(
                 modelPath = "models/prague_wizard.glb",
+                location = location,
                 weather = weather,
                 modifier = Modifier.fillMaxSize()
             )
