@@ -64,7 +64,6 @@ import kotlin.math.roundToInt
 fun LocationDetailScreen(
     locationId: String?,
     onNavigateBack: () -> Unit,
-    onNavigateToWorld: () -> Unit,
     onNavigateToSettings: () -> Unit,
     locationsRepository: LocationsRepository,
     settingsRepository: SettingsRepository,
@@ -199,13 +198,6 @@ fun LocationDetailScreen(
                             onClick = {
                                 showMenu = false
                                 applyWallpaper()
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text("View world") },
-                            onClick = {
-                                showMenu = false
-                                onNavigateToWorld()
                             },
                         )
                         DropdownMenuItem(

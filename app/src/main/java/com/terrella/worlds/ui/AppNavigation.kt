@@ -10,10 +10,8 @@ import com.terrella.worlds.data.SettingsRepository
 import com.terrella.worlds.ui.detail.LocationDetailScreen
 import com.terrella.worlds.ui.locations.LocationsScreen
 import com.terrella.worlds.ui.settings.SettingsScreen
-import com.terrella.worlds.ui.world.WorldScreen
 
 object Routes {
-    const val WORLD = "world"
     const val LOCATIONS = "locations"
     const val DETAIL = "detail"
     const val SETTINGS = "settings"
@@ -26,13 +24,6 @@ fun AppNavigation() {
     val locationsRepository = LocationsRepository.get(LocalContext.current)
 
     NavHost(navController = navController, startDestination = Routes.LOCATIONS) {
-        composable("${Routes.WORLD}?locationId={locationId}") { backStackEntry ->
-            com.terrella.worlds.ui.world.WorldScreen(
-                onNavigateToSettings = { navController.navigate(Routes.SETTINGS) },
-                onNavigateToLocations = { navController.popBackStack() },
-                locationId = backStackEntry.arguments?.getString("locationId"),
-            )
-        }
         composable(Routes.LOCATIONS) {
             com.terrella.worlds.ui.locations.LocationsScreen(
                 onOpenDetail = { id -> navController.navigate("${Routes.DETAIL}/$id") },
@@ -45,7 +36,6 @@ fun AppNavigation() {
             LocationDetailScreen(
                 locationId = backStackEntry.arguments?.getString("locationId"),
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToWorld = { navController.navigate("${Routes.WORLD}") },
                 onNavigateToSettings = { navController.navigate(Routes.SETTINGS) },
                 locationsRepository = locationsRepository,
                 settingsRepository = settingsRepository,

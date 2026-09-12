@@ -163,7 +163,7 @@ fun LocationsScreen(
     ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize()) {
         Image(
-            bitmap = ((nightBmp ?: dayBmp) ?: return@Box).asImageBitmap(),
+            painter = androidx.compose.ui.res.painterResource(com.terrella.worlds.R.drawable.app_background),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
