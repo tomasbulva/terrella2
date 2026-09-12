@@ -135,7 +135,7 @@ fun LocationDetailScreen(
             contentScale = ContentScale.Crop,
         )
 
-        // 3D Diorama View in center
+        // 3D Diorama View in center with live weather effects overlay
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -144,6 +144,12 @@ fun LocationDetailScreen(
         ) {
             Diorama3DView(
                 modelPath = "models/prague_wizard.glb",
+                weather = weather,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            // Dynamic atmospheric weather VFX layer (rain, snow, fog, lightning, night vignette)
+            WeatherEffectsOverlay(
                 weather = weather,
                 modifier = Modifier.fillMaxSize()
             )
