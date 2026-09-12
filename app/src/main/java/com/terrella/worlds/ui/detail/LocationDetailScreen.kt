@@ -118,7 +118,12 @@ fun LocationDetailScreen(
                         else "Couldn't set wallpaper: ${(result as WallpaperInstaller.Result.Error).message}"
                     )
                 } else {
-                    Toasts.show(context, "Active location set to ${loc.name}")
+                    val pickerResult = WallpaperInstaller.launchLiveWallpaperPicker(context)
+                    if (pickerResult is WallpaperInstaller.Result.Ok) {
+                        Toasts.show(context, "Setting live wallpaper for ${loc.name}…")
+                    } else {
+                        Toasts.show(context, "Active location set to ${loc.name}")
+                    }
                 }
                 Telemetry.event("wallpaper_applied", mapOf("type" to s.wallpaperType, "location" to loc.name))
             }
