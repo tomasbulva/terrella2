@@ -24,6 +24,8 @@ data class Settings(
     val useMetric: Boolean,
     val artStyle: String,
     val showTitleInImage: Boolean,
+    val wallpaperType: String, // "live" (default) | "static"
+    val renderOnWallpaper: Boolean, // future: TRELLIS 3D tile rendered into wallpaper
 )
 
 class SettingsRepository(private val context: Context) {
@@ -40,6 +42,8 @@ class SettingsRepository(private val context: Context) {
         val USE_METRIC = booleanPreferencesKey("use_metric")
         val ART_STYLE = stringPreferencesKey("art_style")
         val SHOW_TITLE_IN_IMAGE = booleanPreferencesKey("show_title_in_image")
+        val WALLPAPER_TYPE = stringPreferencesKey("wallpaper_type")
+        val RENDER_ON_WALLPAPER = booleanPreferencesKey("render_on_wallpaper")
     }
 
     companion object {
@@ -67,6 +71,8 @@ class SettingsRepository(private val context: Context) {
             useMetric = p[Keys.USE_METRIC] ?: true,
             artStyle = p[Keys.ART_STYLE] ?: "original",
             showTitleInImage = p[Keys.SHOW_TITLE_IN_IMAGE] ?: false,
+            wallpaperType = p[Keys.WALLPAPER_TYPE] ?: "live",
+            renderOnWallpaper = p[Keys.RENDER_ON_WALLPAPER] ?: false,
         )
     }
 
@@ -83,4 +89,6 @@ class SettingsRepository(private val context: Context) {
     suspend fun setUseMetric(metric: Boolean) = context.dataStore.edit { it[Keys.USE_METRIC] = metric }
     suspend fun setArtStyle(style: String) = context.dataStore.edit { it[Keys.ART_STYLE] = style }
     suspend fun setShowTitleInImage(show: Boolean) = context.dataStore.edit { it[Keys.SHOW_TITLE_IN_IMAGE] = show }
+    suspend fun setWallpaperType(type: String) = context.dataStore.edit { it[Keys.WALLPAPER_TYPE] = type }
+    suspend fun setRenderOnWallpaper(render: Boolean) = context.dataStore.edit { it[Keys.RENDER_ON_WALLPAPER] = render }
 }

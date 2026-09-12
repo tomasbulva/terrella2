@@ -79,7 +79,7 @@ import kotlin.math.roundToInt
 
 @Composable
 fun LocationsScreen(
-    onNavigateToWorld: (String) -> Unit,
+    onOpenDetail: (String) -> Unit,
     onNavigateToSettings: () -> Unit,
     locationsRepository: LocationsRepository,
     settingsRepository: SettingsRepository,
@@ -227,7 +227,7 @@ fun LocationsScreen(
                                     scope.launch {
                                         locationsRepository.select(current.id)
                                         Telemetry.event("location_selected", mapOf("source" to "gps"))
-                                        onNavigateToWorld(current.id)
+                                        onOpenDetail(current.id)
                                     }
                                 },
                                 onDelete = null,
@@ -251,7 +251,7 @@ fun LocationsScreen(
                                     scope.launch {
                                         locationsRepository.select(location.id)
                                         Telemetry.event("location_selected", mapOf("source" to "list"))
-                                        onNavigateToWorld(location.id)
+                                        onOpenDetail(location.id)
                                     }
                                 },
                                 onDelete = {

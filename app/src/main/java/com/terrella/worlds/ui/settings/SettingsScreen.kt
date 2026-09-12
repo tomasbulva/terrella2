@@ -172,72 +172,60 @@ private fun WeatherTestRow(s: Settings, repo: SettingsRepository) {
 
 @Composable
 private fun WallpaperSection(s: Settings, repo: SettingsRepository, scope: kotlinx.coroutines.CoroutineScope) {
-    val context = LocalContext.current
-    val modes = listOf("video" to "Live video (looping)", "static" to "Static image")
-    SectionCard("Wallpaper") {
-        modes.forEach { (id, label) ->
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                RadioButton(
-                    selected = s.wallpaperMode == id,
-                    onClick = {
-                        scope.launch {
-                            repo.setWallpaperMode(id)
-                            TelemetryBridge.event("wallpaper_mode_changed", mapOf("mode" to id))
-                        }
-                    },
-                )
-                Text(label, style = MaterialTheme.typography.bodyLarge)
-            }
-        }
+    SectionCard("Wallpaper type", icon = Icons.Filled.Wallpaper) {
         Text(
-            "Diorama imagery follows each place automatically: local time of day and live weather decide day or night.",
+            "Applied by the SET AS ACTIVE button on each place. Live is the default.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        if (s.wallpaperMode == "video") {
-            LiveWallpaperButton()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+                .padding(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            listOf("live" to "Live video", "static" to "Static image").forEach { (id, label) ->
+                val selected = s.wallpaperType == id
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .background(
+                            if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                            RoundedCornerShape(9.dp),
+                        )
+                        .clickable {
+                            scope.launch { repo.setWallpaperType(id) }
+                            TelemetryBridge.event("wallpaper_type_changed", mapOf("type" to id))
+                        }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        label,
+                        color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+            }
         }
     }
-}
-
-@Composable
-private fun LiveWallpaperButton() {
-    val context = LocalContext.current
-    OutlinedButton(onClick = {
-        val component = android.content.ComponentName(context, com.terrella.worlds.wallpaper.VideoWallpaperService::class.java)
-        val intent = IntentBuilder(component)
-        runCatching { context.startActivity(intent) }
-    }) { Text("Set looping video wallpaper") }
-}
-
-private fun IntentBuilder(component: android.content.ComponentName): android.content.Intent =
-    android.content.Intent(android.app.WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
-        .putExtra(android.app.WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT, component)
-
-@Composable
-private fun TelemetrySection(s: Settings, repo: SettingsRepository, scope: kotlinx.coroutines.CoroutineScope) {
-    SectionCard("Usage tracking") {
+    SectionCard("Render on wallpaper", icon = Icons.Filled.Wallpaper) {
+        Text(
+            "Render the floating diorama tile into the wallpaper via 3D (available when the render pipeline lands).",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            Switch(
-                checked = s.telemetryEnabled,
-                onCheckedChange = {
-                    scope.launch { repo.setTelemetryEnabled(it) }
-                },
-            )
+            Switch(checked = s.renderOnWallpaper, onCheckedChange = { scope.launch { repo.setRenderOnWallpaper(it) } })
             Text(
-                "Share anonymous usage events",
+                "Use 3D tile on the wallpaper",
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(start = 8.dp),
             )
         }
-        Text(
-            "Helps us learn which features you actually use. Events go only to our own server, " +
-                "batches every 6h, and contain a random install id — never ads, never third parties.",
-            style = MaterialTheme.typography.bodySmall,
-        )
     }
 }
-
 
 @Composable
 private fun LocationsSection(s: Settings, repo: SettingsRepository, scope: kotlinx.coroutines.CoroutineScope) {
