@@ -21,6 +21,7 @@ object DioramaRegistry {
      */
     private val LOCATION_OVERRIDES = mapOf(
         "prague" to "models/prague_wizard.glb",
+        "amsterdam" to "models/amsterdam_canal.glb",
     )
 
     /**
