@@ -45,7 +45,9 @@ WEIGHTS = {
     "qa": (0.65, 0.70),
     "video_day": (0.70, 0.80),
     "video_night": (0.80, 0.90),
-    "poster": (0.90, 0.95),
+    "poster": (0.90, 0.92),
+    "stylize_day": (0.92, 0.96),
+    "stylize_night": (0.96, 0.99),
 }
 ASSET_FILES = {"day.mp4": "video/mp4", "night.mp4": "video/mp4",
                "poster.jpg": "image/jpeg", "model.glb": "model/gltf-binary"}
@@ -317,6 +319,23 @@ def run_job(jid):
             return
         if cancelled():
             return
+
+        # stylize: AI I2V pass over the rendered clips (Hunyuan-1.5). This stage
+        # is best-effort — on any failure the plain orbit clips stay and the job
+        # still publishes (stylization must never break asset delivery).
+        for variant in ("day", "night"):
+            if cancelled():
+                return
+            set_stage(j, f"stylize_{variant}")
+            src, dst = work / f"{variant}.mp4", work / f"{variant}_styl.mp4"
+            r = run_step([PIPE_PY, str(PIPE_SCRIPTS / "step8_stylize.py"),
+                          str(src), str(dst), "--variant", variant])
+            if r.returncode == 0 and dst.exists() and dst.stat().st_size > 100_000:
+                os.replace(dst, src)
+                print(f"[job {jid}] stylized {variant}", flush=True)
+            else:
+                dst.unlink(missing_ok=True)
+                print(f"[job {jid}] stylize {variant} skipped: {r.stdout[-200:]}", flush=True)
 
         # publish
         dest = ASSETS / key
