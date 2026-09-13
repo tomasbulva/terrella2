@@ -133,6 +133,8 @@ class VideoWallpaperService : WallpaperService() {
             runCatching {
                 MediaPlayer.create(applicationContext, desiredRes)?.apply {
                     isLooping = true
+                    // Wallpapers are silent — never route audio from a live wallpaper
+                    setVolume(0f, 0f)
                     setSurface(surface)
                     start()
                     player = this
