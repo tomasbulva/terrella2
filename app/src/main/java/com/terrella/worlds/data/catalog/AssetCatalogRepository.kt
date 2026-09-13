@@ -218,12 +218,13 @@ class AssetCatalogRepository private constructor(private val context: Context) {
     // ---- HTTP plumbing (HttpURLConnection to match the app's zero-dep stack) ----
 
     private fun url(settings: Settings, path: String): String {
+        val p = path.trim()
+        if (p.startsWith("http")) return p
         val base = settings.assetServerUrl.trimEnd('/')
-        return if (path.startsWith("/api/") || path.startsWith("http")) {
-            if (path.startsWith("http")) path else absoluteFor(base, path)
-        } else {
-            "$base$path"
-        }
+        // Root-relative paths (e.g. "/terrella/assets/<key>/day.mp4" from the
+        // catalog) must resolve against the DOMAIN root — joining them onto the
+        // API base would double the prefix and 404.
+        return if (p.startsWith("/")) absoluteFor(base, p) else "$base/$p"
     }
 
     private fun absoluteFor(base: String, rootPath: String): String =
