@@ -75,8 +75,9 @@ Binary download. `file` ∈ `day.mp4 | night.mp4 | poster.jpg | model.glb`.
 
 | stage | progress range |
 |---|---|
-| cutout | 0.05 – 0.10 |
-| three_d (TRELLIS) | 0.10 – 0.60 (timer-based, GPU gives no callback) |
+| concept (2D image) | 0.02 – 0.10 |
+| cutout | 0.10 – 0.15 |
+| three_d (TRELLIS) | 0.15 – 0.60 (timer-based, GPU gives no callback) |
 | textures | 0.60 – 0.65 |
 | qa | 0.65 – 0.70 |
 | video_day | 0.70 – 0.80 |

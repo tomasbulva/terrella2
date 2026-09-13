@@ -38,8 +38,9 @@ FPS, DURATION, WIDTH, HEIGHT = 30, 6.0, 720, 1280
 
 # stage -> (progress_lo, progress_hi) per CONTRACT.md
 WEIGHTS = {
-    "cutout": (0.05, 0.10),
-    "three_d": (0.10, 0.60),
+    "concept": (0.02, 0.10),
+    "cutout": (0.10, 0.15),
+    "three_d": (0.15, 0.60),
     "textures": (0.60, 0.65),
     "qa": (0.65, 0.70),
     "video_day": (0.70, 0.80),
@@ -50,6 +51,9 @@ ASSET_FILES = {"day.mp4": "video/mp4", "night.mp4": "video/mp4",
                "poster.jpg": "image/jpeg", "model.glb": "model/gltf-binary"}
 
 app = FastAPI(title="Terrella Asset Service", version="1.0")
+
+TRELLIS_RETRIES = 3
+QUOTA_WAIT_S = 300
 
 _lock = threading.RLock()
 _catalog = {"version": 0, "assets": []}
@@ -81,6 +85,15 @@ def save_jobs():
 
 
 def _atomic_write_safe(path: Path, data):
+    # Unique tmp per call: a fixed name races between the worker and API
+    # threads (os.replace then fails with ENOENT and kills the worker).
+    tmp = path.with_suffix(f".{os.getpid()}.{threading.get_ident()}.{uuid.uuid4().hex[:8]}.tmp")
+    try:
+        tmp.write_text(json.dumps(data, indent=2))
+        os.replace(tmp, path)
+    finally:
+        if tmp.exists():
+            tmp.unlink(missing_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(data, indent=2))
     os.replace(tmp, path)
@@ -166,28 +179,40 @@ def fail(j, msg, log):
 
 
 def run_trellis_timer(j, work):
-    """step2 with timer-based progress 0.10 -> 0.60 over its typical ~180 s."""
+    """step2 with timer-based progress 0.10 -> 0.60 over its typical ~180 s.
+
+    ZeroGPU quota errors (anonymous fallback when the HF token is missing or
+    exhausted) are retried with a wait instead of failing the job — the
+    anonymous quota replenishes over time.
+    """
     lo, hi = WEIGHTS["three_d"]
     outdir = work / "trellis"
     outdir.mkdir(parents=True, exist_ok=True)
     argv = [PIPE_PY, str(PIPE_SCRIPTS / "step2_trellis.py"),
             str(work / "cutout.png"), str(outdir)]
-    p = subprocess.Popen(argv, cwd=PIPE_SCRIPTS, env=sub_env(),
-                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-    t0 = time.time()
-    while p.poll() is None:
-        time.sleep(2)
-        frac = min(1.0, (time.time() - t0) / 180.0)
-        with _lock:
-            j["progress"] = lo + (hi - lo) * frac
-        save_jobs()
-    log = p.stdout.read()
-    if p.returncode != 0:
+    for attempt in range(TRELLIS_RETRIES + 1):
+        p = subprocess.Popen(argv, cwd=PIPE_SCRIPTS, env=sub_env(),
+                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        t0 = time.time()
+        while p.poll() is None:
+            time.sleep(2)
+            frac = min(1.0, (time.time() - t0) / 180.0)
+            with _lock:
+                j["progress"] = lo + (hi - lo) * frac
+            save_jobs()
+        log = p.stdout.read() or ""
+        if p.returncode == 0:
+            break
+        if "ZeroGPU quota" in log and attempt < TRELLIS_RETRIES:
+            print(f"[job {j['job_id']}] ZeroGPU quota hit — retry "
+                  f"{attempt + 1}/{TRELLIS_RETRIES} in {QUOTA_WAIT_S}s", flush=True)
+            time.sleep(QUOTA_WAIT_S)
+            continue
         fail(j, "three_d (TRELLIS) failed", log)
         return None
     glb = outdir / "trellis_out.glb"
     if not glb.exists():
-        fail(j, "three_d produced no GLB", log)
+        fail(j, "three_d produced no GLB", "")
         return None
     return glb
 
@@ -243,8 +268,19 @@ def run_job(jid):
         else:
             src_png = SEEDS / f"{key}.png"
             if not src_png.exists():
-                fail(j, f"no staged input image at {src_png} for full generation", "")
-                return
+                # Self-contained 2D concept generation (Wikipedia facts +
+                # FLUX.1-schnell Space, pollinations fallback). Persisted to
+                # seeds/ so the concept is auditable and reusable.
+                set_stage(j, "concept")
+                r = run_step([PIPE_PY, str(PIPE_SCRIPTS / "step0_concept.py"),
+                              str(src_png), j["name"], j["country"]])
+                if cancelled():
+                    return
+                if r.returncode != 0 or not src_png.exists():
+                    fail(j, "2D concept generation failed", r.stdout)
+                    return
+                j["concept"] = str(src_png)
+                save_jobs()
             set_stage(j, "cutout")
             r = run_step([PIPE_PY, str(PIPE_SCRIPTS / "step1_cutout.py"), str(src_png), str(work / "cutout.png")])
             if cancelled():
@@ -321,6 +357,10 @@ def worker_loop():
             run_job(jid)
         except Exception as e:
             print(f"[worker] error on {jid}: {e}", flush=True)
+            # Never leave a job hanging in "generating" on internal errors
+            jj = _jobs.get(jid)
+            if jj and jj["status"] in ("queued", "generating"):
+                fail(jj, f"internal error: {e.__class__.__name__}: {e}", "")
         finally:
             _queue.task_done()
 
