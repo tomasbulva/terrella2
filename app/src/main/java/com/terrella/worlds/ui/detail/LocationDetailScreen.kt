@@ -1,7 +1,5 @@
 package com.terrella.worlds.ui.detail
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,9 +40,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -54,7 +50,6 @@ import androidx.compose.ui.unit.sp
 import com.terrella.worlds.R
 import com.terrella.worlds.data.DioramaRegistry
 import com.terrella.worlds.data.LocationsRepository
-import com.terrella.worlds.data.SavedLocation
 import com.terrella.worlds.data.SettingsRepository
 import com.terrella.worlds.data.telemetry.Telemetry
 import com.terrella.worlds.data.weather.WeatherProviders
@@ -64,7 +59,6 @@ import com.terrella.worlds.wallpaper.WallpaperInstaller
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import kotlin.math.roundToInt
@@ -117,10 +111,6 @@ fun LocationDetailScreen(
         Pair(timeFmt.format(cal.time), dateFmt.format(cal.time))
     }
 
-    val nightBmp = remember { decodeAssetB(context, "wallpapers/diorama_night.jpg") }
-    val dayBmp = remember { decodeAssetB(context, "wallpapers/diorama_day.jpg") }
-    val backdrop = if (weather?.isDay == false) nightBmp else dayBmp
-
     fun applyOrUnsetWallpaper() {
         val loc = location ?: return
         scope.launch {
@@ -133,52 +123,37 @@ fun LocationDetailScreen(
                 Telemetry.event("wallpaper_unset", mapOf("location" to loc.name))
             } else {
                 locationsRepository.select(loc.id)
-                val asset = if (weather?.isDay == false) "diorama_night.jpg" else "diorama_day.jpg"
-                val result = WallpaperInstaller.setStatic(context, asset)
-                Toasts.show(
-                    context,
-                    if (result is WallpaperInstaller.Result.Ok)
-                        "Wallpaper set for ${loc.name}"
-                    else "Couldn't set wallpaper: ${(result as WallpaperInstaller.Result.Error).message}"
-                )
-                Telemetry.event("wallpaper_applied", mapOf("location" to loc.name))
+                if (s.wallpaperType == "live") {
+                    val result = WallpaperInstaller.launchLiveWallpaperPicker(context)
+                    if (result !is WallpaperInstaller.Result.Ok) {
+                        Toasts.show(context, "Couldn't open live wallpaper picker")
+                    }
+                } else {
+                    val asset = if (weather?.isDay == false) "diorama_night.jpg" else "diorama_day.jpg"
+                    val result = WallpaperInstaller.setStatic(context, asset)
+                    Toasts.show(
+                        context,
+                        if (result is WallpaperInstaller.Result.Ok)
+                            "Wallpaper set for ${loc.name}"
+                        else "Couldn't set wallpaper: ${(result as WallpaperInstaller.Result.Error).message}"
+                    )
+                }
+                Telemetry.event("wallpaper_applied", mapOf("type" to s.wallpaperType, "location" to loc.name))
             }
             rendering = false
         }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // ── 1. Dynamic Diorama Background (Day / Night lighted city) ──
-        if (backdrop != null) {
-            Image(
-                bitmap = backdrop.asImageBitmap(),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Black.copy(alpha = 0.40f),
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.60f)
-                            )
-                        )
-                    )
-            )
-        } else {
-            Image(
-                painter = painterResource(id = R.drawable.app_background),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-            )
-        }
+        // ── 1. Clean Atmospheric Cosmic Theme Background (No colliding 2D diorama) ──
+        Image(
+            painter = painterResource(id = R.drawable.app_background),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+        )
 
-        // ── 2. 3D Diorama View in center ──
+        // ── 2. 3D Floating Diorama Tile in Center Viewport ──
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -360,7 +335,3 @@ fun LocationDetailScreen(
         }
     }
 }
-
-private fun decodeAssetB(context: android.content.Context, path: String): android.graphics.Bitmap? = runCatching {
-    BitmapFactory.decodeStream(context.assets.open(path))
-}.getOrNull()

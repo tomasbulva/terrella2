@@ -1,9 +1,11 @@
 package com.terrella.worlds.wallpaper
 
 import android.app.WallpaperManager
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 
-/** Wallpaper installer helpers that apply directly in the background. */
+/** Wallpaper installer helpers that apply directly in the background or launch the live wallpaper picker. */
 object WallpaperInstaller {
 
     sealed class Result {
@@ -16,6 +18,19 @@ object WallpaperInstaller {
         WallpaperHelper.decodeAndApply(context, assetName).getOrThrow()
         Result.Ok
     }.getOrElse { Result.Error(it.message ?: "failed to set wallpaper") }
+
+    /** Launches the system Live Wallpaper preview picker for VideoWallpaperService. */
+    fun launchLiveWallpaperPicker(context: Context): Result = runCatching {
+        val intent = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).apply {
+            putExtra(
+                WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
+                ComponentName(context, VideoWallpaperService::class.java)
+            )
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+        Result.Ok
+    }.getOrElse { Result.Error(it.message ?: "failed to launch live wallpaper picker") }
 
     /** Clears wallpaper. */
     fun clear(context: Context): Result = runCatching {
