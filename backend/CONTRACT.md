@@ -46,7 +46,10 @@ Examples: "prague,czechia"  "amsterdam,netherlands"  "new york,united states"
 avoid re-downloading manifests.
 
 ### POST /jobs
-Body: `{ "name": "Rome", "country": "Italy", "lat": 41.9, "lon": 12.5 }`
+Body: `{ "name": "Rome", "country": "Italy", "lat": 41.9, "lon": 12.5, "force": false }`
+
+`force: true` bypasses the catalog/in-flight dedupe and regenerates the asset
+from scratch (fresh 2D concept unless a staged seed exists).
 
 Returns a Job. Dedupe rules:
 - Asset already in catalog → `{ "status": "ready", "asset": {...} }` (no job created)

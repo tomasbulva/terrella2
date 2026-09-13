@@ -390,6 +390,8 @@ class JobRequest(BaseModel):
     country: str
     lat: float | None = None
     lon: float | None = None
+    force: bool = False  # bypass catalog/in-flight dedupe and regenerate
+    lon: float | None = None
 
 
 @app.post("/terrella/api/jobs")
@@ -398,12 +400,13 @@ def create_job(req: JobRequest, _=Depends(auth)):
     if not key.split(",")[0] or not key.split(",")[1]:
         raise HTTPException(400, "name and country required")
     with _lock:
-        for a in _catalog["assets"]:
-            if a["key"] == key:
-                return {"status": "ready", "asset": copy.deepcopy(a)}
-        for j in _jobs.values():
-            if j["key"] == key and j["status"] in ("queued", "generating"):
-                return public_job(j)
+        if not req.force:
+            for a in _catalog["assets"]:
+                if a["key"] == key:
+                    return {"status": "ready", "asset": copy.deepcopy(a)}
+            for j in _jobs.values():
+                if j["key"] == key and j["status"] in ("queued", "generating"):
+                    return public_job(j)
         j = {"job_id": uuid.uuid4().hex[:12], "key": key, "name": req.name.strip(),
              "country": req.country.strip(), "status": "queued", "progress": 0.0,
              "stage": None, "error": None, "asset": None,
