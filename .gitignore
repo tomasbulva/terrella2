@@ -9,3 +9,6 @@ local.properties
 captures/
 .externalNativeBuild/
 .cxx/
+backend/venv/
+backend/__pycache__/
+backend/*.token
