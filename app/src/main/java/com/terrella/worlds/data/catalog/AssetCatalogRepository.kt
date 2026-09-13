@@ -131,7 +131,7 @@ class AssetCatalogRepository private constructor(private val context: Context) {
     }
 
     private suspend fun fetchCatalog(settings: Settings): CatalogResponse? {
-        val body = api(url(settings, "/catalog"), settings) { it.inputStream.readBytes() }
+        val body = api(apiUrl(settings, "catalog"), settings) { it.inputStream.readBytes() }
         return body?.let { json.decodeFromString<CatalogResponse>(String(it)) }
     }
 
@@ -143,7 +143,7 @@ class AssetCatalogRepository private constructor(private val context: Context) {
                 JobRequest(loc.name.trim(), loc.country.trim(), loc.latitude, loc.longitude),
             )
             val resp = runCatching {
-                post(url(settings, "/jobs"), payload, settings)
+                post(apiUrl(settings, "jobs"), payload, settings)
             }.getOrNull()
             if (resp == null) {
                 _states.value = _states.value + (key to AssetState.Missing)
@@ -171,7 +171,7 @@ class AssetCatalogRepository private constructor(private val context: Context) {
             while (System.currentTimeMillis() < deadline) {
                 delay(POLL_INTERVAL_MS)
                 val resp = runCatching {
-                    val body = api(url(settings, "/jobs/$jobId"), settings) { it.inputStream.readBytes() }
+                    val body = api(apiUrl(settings, "jobs/$jobId"), settings) { it.inputStream.readBytes() }
                     body?.let { json.decodeFromString<JobResponse>(String(it)) }
                 }.getOrNull()
                 if (resp == null) continue // transient network blip — keep polling
@@ -206,7 +206,7 @@ class AssetCatalogRepository private constructor(private val context: Context) {
             Triple(asset.poster, posterFile(key), 5_000_000L),
         ).all { (path, target, max) ->
             runCatching {
-                downloadBinary(url(settings, path), settings, target, max)
+                downloadBinary(assetUrl(settings, path), settings, target, max)
             }.getOrElse {
                 Log.w(TAG, "download ${target.name} failed: ${it.message}")
                 false
@@ -217,18 +217,22 @@ class AssetCatalogRepository private constructor(private val context: Context) {
 
     // ---- HTTP plumbing (HttpURLConnection to match the app's zero-dep stack) ----
 
-    private fun url(settings: Settings, path: String): String {
+    // ---- URL plumbing: API endpoints live under the API base; asset files are
+    // domain-root-relative ("/terrella/assets/<key>/file") per CONTRACT.md ----
+
+    private fun apiUrl(settings: Settings, endpoint: String): String =
+        settings.assetServerUrl.trimEnd('/') + "/" + endpoint.trimStart('/')
+
+    private fun assetUrl(settings: Settings, path: String): String {
         val p = path.trim()
         if (p.startsWith("http")) return p
-        val base = settings.assetServerUrl.trimEnd('/')
-        // Root-relative paths (e.g. "/terrella/assets/<key>/day.mp4" from the
-        // catalog) must resolve against the DOMAIN root — joining them onto the
-        // API base would double the prefix and 404.
-        return if (p.startsWith("/")) absoluteFor(base, p) else "$base/$p"
+        if (!p.startsWith("/")) return apiUrl(settings, p)
+        return runCatching {
+            val u = URI(settings.assetServerUrl)
+            val port = if (u.port in 0..65535) ":${u.port}" else ""
+            "${u.scheme}://${u.host}$port$p"
+        }.getOrDefault(settings.assetServerUrl.trimEnd('/') + p)
     }
-
-    private fun absoluteFor(base: String, rootPath: String): String =
-        runCatching { URI(base).resolve(rootPath).toString() }.getOrDefault(base + rootPath)
 
     private fun <T> api(target: String, settings: Settings, block: (HttpURLConnection) -> T): T? {
         val conn = (URL(target).openConnection() as HttpURLConnection).apply {
