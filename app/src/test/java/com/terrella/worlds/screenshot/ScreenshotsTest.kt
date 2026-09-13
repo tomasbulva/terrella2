@@ -5,6 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -23,7 +24,7 @@ import org.robolectric.annotation.GraphicsMode
 
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [34], qualifiers = "w412dp-h915dp-xhdpi")
+@Config(sdk = [34], qualifiers = "w412dp-h915dp-xhdpi", application = TestApp::class)
 class ScreenshotsTest {
 
     @get:Rule
@@ -42,11 +43,13 @@ class ScreenshotsTest {
             tempC = 14.0,
             condition = Condition.RAIN,
             isDay = true,
-            provider = "Open-Meteo"
+            windKmh = 18.0,
+            cloudCoverPct = 80,
+            precipMm = 2.5,
         )
         composeTestRule.setContent {
             TerrellaTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
+                Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF161C24)) {
                     WeatherEffectsOverlay(weather = weather)
                 }
             }
@@ -60,11 +63,13 @@ class ScreenshotsTest {
             tempC = -2.0,
             condition = Condition.SNOW,
             isDay = false,
-            provider = "Open-Meteo"
+            windKmh = 8.0,
+            cloudCoverPct = 95,
+            precipMm = 1.0,
         )
         composeTestRule.setContent {
             TerrellaTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
+                Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF161C24)) {
                     WeatherEffectsOverlay(weather = weather)
                 }
             }
@@ -78,11 +83,13 @@ class ScreenshotsTest {
             tempC = 8.0,
             condition = Condition.FOG,
             isDay = true,
-            provider = "Open-Meteo"
+            windKmh = 5.0,
+            cloudCoverPct = 90,
+            precipMm = 0.0,
         )
         composeTestRule.setContent {
             TerrellaTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
+                Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF161C24)) {
                     WeatherEffectsOverlay(weather = weather)
                 }
             }
@@ -90,3 +97,6 @@ class ScreenshotsTest {
         composeTestRule.onRoot().captureRoboImage("build/outputs/roborazzi/weather_fog.png")
     }
 }
+
+/** Bare Application — the real WorldsApp schedules WorkManager jobs in onCreate, which Robolectric can't run. */
+class TestApp : android.app.Application()
