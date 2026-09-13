@@ -26,6 +26,9 @@ data class Settings(
     val showTitleInImage: Boolean,
     val wallpaperType: String, // "live" (default) | "static"
     val renderOnWallpaper: Boolean, // future: TRELLIS 3D tile rendered into wallpaper
+    val assetServerUrl: String,
+    val assetServerToken: String,
+    val appliedLocationId: String,
 )
 
 class SettingsRepository(private val context: Context) {
@@ -44,6 +47,9 @@ class SettingsRepository(private val context: Context) {
         val SHOW_TITLE_IN_IMAGE = booleanPreferencesKey("show_title_in_image")
         val WALLPAPER_TYPE = stringPreferencesKey("wallpaper_type")
         val RENDER_ON_WALLPAPER = booleanPreferencesKey("render_on_wallpaper")
+        val ASSET_SERVER_URL = stringPreferencesKey("asset_server_url")
+        val ASSET_SERVER_TOKEN = stringPreferencesKey("asset_server_token")
+        val APPLIED_LOCATION_ID = stringPreferencesKey("applied_location_id")
     }
 
     companion object {
@@ -73,6 +79,9 @@ class SettingsRepository(private val context: Context) {
             showTitleInImage = p[Keys.SHOW_TITLE_IN_IMAGE] ?: false,
             wallpaperType = p[Keys.WALLPAPER_TYPE] ?: "live",
             renderOnWallpaper = p[Keys.RENDER_ON_WALLPAPER] ?: false,
+            assetServerUrl = p[Keys.ASSET_SERVER_URL] ?: com.terrella.worlds.BuildConfig.ASSET_SERVICE_URL,
+            assetServerToken = p[Keys.ASSET_SERVER_TOKEN] ?: com.terrella.worlds.BuildConfig.ASSET_SERVICE_TOKEN,
+            appliedLocationId = p[Keys.APPLIED_LOCATION_ID] ?: "",
         )
     }
 
@@ -91,4 +100,7 @@ class SettingsRepository(private val context: Context) {
     suspend fun setShowTitleInImage(show: Boolean) = context.dataStore.edit { it[Keys.SHOW_TITLE_IN_IMAGE] = show }
     suspend fun setWallpaperType(type: String) = context.dataStore.edit { it[Keys.WALLPAPER_TYPE] = type }
     suspend fun setRenderOnWallpaper(render: Boolean) = context.dataStore.edit { it[Keys.RENDER_ON_WALLPAPER] = render }
+    suspend fun setAssetServerUrl(url: String) = context.dataStore.edit { it[Keys.ASSET_SERVER_URL] = url }
+    suspend fun setAssetServerToken(token: String) = context.dataStore.edit { it[Keys.ASSET_SERVER_TOKEN] = token }
+    suspend fun setAppliedLocationId(id: String) = context.dataStore.edit { it[Keys.APPLIED_LOCATION_ID] = id }
 }

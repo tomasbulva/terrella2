@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
@@ -19,6 +21,20 @@ android {
 
     defaultConfig {
         buildConfigField("String", "TELEMETRY_URL", "\"${project.findProperty("TELEMETRY_URL") ?: ""}\"")
+        buildConfigField(
+            "String",
+            "ASSET_SERVICE_URL",
+            "\"${project.findProperty("ASSET_SERVICE_URL") ?: "https://jillvanc.studio/terrella/api"}\"",
+        )
+        val localProps = Properties().apply {
+            val f = rootProject.file("local.properties")
+            if (f.exists()) f.inputStream().use { load(it) }
+        }
+        val assetToken = project.findProperty("ASSET_SERVICE_TOKEN") as? String
+            ?: localProps.getProperty("ASSET_SERVICE_TOKEN")
+            ?: System.getenv("ASSET_SERVICE_TOKEN")
+            ?: ""
+        buildConfigField("String", "ASSET_SERVICE_TOKEN", "\"$assetToken\"")
     }
 
     buildTypes {

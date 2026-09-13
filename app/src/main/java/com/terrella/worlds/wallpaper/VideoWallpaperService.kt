@@ -8,6 +8,7 @@ import android.view.SurfaceHolder
 import com.terrella.worlds.R
 import com.terrella.worlds.data.LocationsRepository
 import com.terrella.worlds.data.SettingsRepository
+import com.terrella.worlds.data.catalog.AssetCatalogRepository
 import com.terrella.worlds.util.SunriseSunsetCalculator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,6 +16,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.io.File
 import java.util.Calendar
 import java.util.TimeZone
 
@@ -26,6 +28,12 @@ import java.util.TimeZone
  * and the clip choice is re-evaluated hourly so day/night transitions land
  * without any GPU work while the screen is off.
  */
+/** Clip source: downloaded per-location file, or bundled raw resource fallback. */
+private sealed class ClipSource {
+    data class Res(val id: Int) : ClipSource()
+    data class FileClip(val path: String) : ClipSource()
+}
+
 class VideoWallpaperService : WallpaperService() {
 
     override fun onCreateEngine(): Engine = VideoEngine()
@@ -37,7 +45,7 @@ class VideoWallpaperService : WallpaperService() {
 
         private var player: MediaPlayer? = null
         private var engineVisible = false
-        private var currentClipRes = 0
+        private var currentClip: ClipSource? = null
 
         private val reevaluator = object : Runnable {
             override fun run() {
@@ -73,29 +81,30 @@ class VideoWallpaperService : WallpaperService() {
             scope.cancel()
         }
 
-        /**
-         * Resolves the active location, computes whether it is currently solar
-         * day there, and picks the matching raw clip. Falls back to the night
-         * clip when a day clip isn't bundled yet (res/raw/diorama_day.mp4).
-         */
+        /** Resolves the active location, computes whether it is currently solar
+         * day there, and picks the matching clip: a downloaded per-location
+         * diorama clip when available, otherwise the bundled raw resource. */
         private fun evaluateAndMaybeSwapClip() {
             scope.launch {
-                val desiredRes = runCatching { resolveClipRes() }.getOrDefault(nightClipRes())
+                val desired = runCatching { resolveClip() }.getOrDefault(ClipSource.Res(nightClipRes()))
                 // Player surface ops must stay on the main thread
-                handler.post { maybeStartPlayer(desiredRes) }
+                handler.post { maybeStartPlayer(desired) }
             }
         }
 
-        private suspend fun resolveClipRes(): Int {
+        private suspend fun resolveClip(): ClipSource {
             val context = applicationContext
             val settings = SettingsRepository.get(context).current()
-            if (settings.wallpaperType != "live") return nightClipRes()
+            if (settings.wallpaperType != "live") return ClipSource.Res(nightClipRes())
 
             val location = LocationsRepository.get(context).selectedLocation.first()
-                ?: return nightClipRes()
+                ?: return ClipSource.Res(nightClipRes())
 
             val isDay = isSolarDay(location.latitude, location.longitude, location.timezone)
-            return if (isDay) dayClipRes() else nightClipRes()
+            val key = AssetCatalogRepository.get(context).keyOf(location)
+            val file = File(File(context.filesDir, "dioramas/$key"), if (isDay) "day.mp4" else "night.mp4")
+            if (file.exists()) return ClipSource.FileClip(file.absolutePath)
+            return ClipSource.Res(if (isDay) dayClipRes() else nightClipRes())
         }
 
         private fun isSolarDay(lat: Double, lon: Double, timezoneId: String?): Boolean {
@@ -121,24 +130,32 @@ class VideoWallpaperService : WallpaperService() {
                 .takeIf { it != 0 }
                 ?: R.raw.diorama_night
 
-        private fun maybeStartPlayer(desiredRes: Int) {
+        private fun maybeStartPlayer(desired: ClipSource) {
             val surface = surfaceHolder.surface ?: return
             if (!surface.isValid || !engineVisible) return
 
             if (player != null) {
-                if (currentClipRes == desiredRes) return // already playing the right clip
+                if (currentClip == desired) return // already playing the right clip
                 stopPlayer()
             }
 
             runCatching {
-                MediaPlayer.create(applicationContext, desiredRes)?.apply {
+                val mp = when (desired) {
+                    is ClipSource.Res -> MediaPlayer.create(applicationContext, desired.id)
+                    is ClipSource.FileClip -> MediaPlayer().apply {
+                        setDataSource(desired.path)
+                        setSurface(surface)
+                        prepare()
+                    }
+                } ?: error("player create failed")
+                mp.apply {
                     isLooping = true
                     // Wallpapers are silent — never route audio from a live wallpaper
                     setVolume(0f, 0f)
-                    setSurface(surface)
+                    if (desired is ClipSource.Res) setSurface(surface)
                     start()
                     player = this
-                    currentClipRes = desiredRes
+                    currentClip = desired
                 }
             }.onFailure { player = null }
         }
@@ -146,7 +163,7 @@ class VideoWallpaperService : WallpaperService() {
         private fun stopPlayer() {
             runCatching { player?.release() }
             player = null
-            currentClipRes = 0
+            currentClip = null
         }
     }
 

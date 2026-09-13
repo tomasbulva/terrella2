@@ -6,6 +6,8 @@ import android.location.Geocoder
 import android.location.Location
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -62,6 +65,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.terrella.worlds.R
+import com.terrella.worlds.data.catalog.AssetCatalogRepository
+import com.terrella.worlds.data.catalog.AssetCatalogRepository.AssetState
 import com.terrella.worlds.data.LocationsRepository
 import com.terrella.worlds.data.SavedLocation
 import com.terrella.worlds.data.SettingsRepository
@@ -69,6 +74,7 @@ import com.terrella.worlds.data.telemetry.Telemetry
 import com.terrella.worlds.data.weather.WeatherProviders
 import com.terrella.worlds.data.weather.WeatherSnapshot
 import com.terrella.worlds.location.LocationProvider
+import com.terrella.worlds.util.DioramaHumor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -146,8 +152,13 @@ fun LocationsScreen(
         }
     }
 
-    val nightBmp = remember { decodeAsset(context, "wallpapers/diorama_night.jpg") }
-    val dayBmp = remember { decodeAsset(context, "wallpapers/diorama_day.jpg") }
+    val catalog = AssetCatalogRepository.get(context)
+    val catalogStates by catalog.states.collectAsStateWithLifecycle()
+
+    // Drive asset availability: catalog sync, downloads, generation jobs
+    LaunchedEffect(locations, s.assetServerToken, s.assetServerUrl) {
+        if (locations.isNotEmpty()) catalog.refresh(s, locations)
+    }
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -211,23 +222,35 @@ fun LocationsScreen(
                         item {
                             SectionLabel("Current location")
                             val snap = weather[current.id]
-                            LocationCard(
-                                name = current.name,
-                                subtitle = current.country,
-                                weather = snap,
-                                isSelected = current.id == selectedId,
-                                backgroundBitmap = if (snap?.isDay == false) nightBmp else dayBmp,
-                                isCurrentLocation = true,
-                                useMetric = s.useMetric,
-                                onClick = {
-                                    scope.launch {
-                                        locationsRepository.select(current.id)
-                                        Telemetry.event("location_selected", mapOf("source" to "gps"))
-                                        onOpenDetail(current.id)
-                                    }
-                                },
-                                onDelete = null,
-                            )
+                            val state = catalogStates[catalog.keyOf(current)]
+                            val poster = rememberPosterBitmap((state as? AssetState.Ready)?.poster)
+                            if (state is AssetState.Ready && poster != null) {
+                                LocationCard(
+                                    name = current.name,
+                                    subtitle = current.country,
+                                    weather = snap,
+                                    isSelected = current.id == selectedId,
+                                    backgroundBitmap = poster,
+                                    isCurrentLocation = true,
+                                    useMetric = s.useMetric,
+                                    onClick = {
+                                        scope.launch {
+                                            locationsRepository.select(current.id)
+                                            Telemetry.event("location_selected", mapOf("source" to "gps"))
+                                            onOpenDetail(current.id)
+                                        }
+                                    },
+                                    onDelete = null,
+                                )
+                            } else {
+                                PendingDioramaCard(
+                                    name = current.name,
+                                    subtitle = current.country,
+                                    state = state ?: AssetState.Missing,
+                                    isSelected = current.id == selectedId,
+                                    isCurrentLocation = true,
+                                )
+                            }
                         }
                     }
                     // ── Your locations (manual) ──
@@ -235,25 +258,40 @@ fun LocationsScreen(
                         item { SectionLabel("Your locations") }
                         items(manualLocations, key = { it.id }) { location ->
                             val snap = weather[location.id]
-                            LocationCard(
-                                name = location.name,
-                                subtitle = location.country,
-                                weather = snap,
-                                isSelected = location.id == selectedId,
-                                backgroundBitmap = if (snap?.isDay == false) nightBmp else dayBmp,
-                                isCurrentLocation = false,
-                                useMetric = s.useMetric,
-                                onClick = {
-                                    scope.launch {
-                                        locationsRepository.select(location.id)
-                                        Telemetry.event("location_selected", mapOf("source" to "list"))
-                                        onOpenDetail(location.id)
-                                    }
-                                },
-                                onDelete = {
-                                    scope.launch { locationsRepository.removeLocation(location.id) }
-                                },
-                            )
+                            val state = catalogStates[catalog.keyOf(location)]
+                            val poster = rememberPosterBitmap((state as? AssetState.Ready)?.poster)
+                            if (state is AssetState.Ready && poster != null) {
+                                LocationCard(
+                                    name = location.name,
+                                    subtitle = location.country,
+                                    weather = snap,
+                                    isSelected = location.id == selectedId,
+                                    backgroundBitmap = poster,
+                                    isCurrentLocation = false,
+                                    useMetric = s.useMetric,
+                                    onClick = {
+                                        scope.launch {
+                                            locationsRepository.select(location.id)
+                                            Telemetry.event("location_selected", mapOf("source" to "list"))
+                                            onOpenDetail(location.id)
+                                        }
+                                    },
+                                    onDelete = {
+                                        scope.launch { locationsRepository.removeLocation(location.id) }
+                                    },
+                                )
+                            } else {
+                                PendingDioramaCard(
+                                    name = location.name,
+                                    subtitle = location.country,
+                                    state = state ?: AssetState.Missing,
+                                    isSelected = location.id == selectedId,
+                                    isCurrentLocation = false,
+                                    onDelete = {
+                                        scope.launch { locationsRepository.removeLocation(location.id) }
+                                    },
+                                )
+                            }
                         }
                     }
                     item { Spacer(Modifier.height(88.dp)) }
@@ -295,9 +333,144 @@ private fun SectionLabel(text: String) {
     )
 }
 
-private fun decodeAsset(context: android.content.Context, path: String): Bitmap? = runCatching {
-    BitmapFactory.decodeStream(context.assets.open(path))
-}.getOrNull()
+@Composable
+private fun rememberPosterBitmap(file: java.io.File?): Bitmap? =
+    remember(file?.absolutePath) {
+        file?.let { runCatching { BitmapFactory.decodeFile(it.absolutePath) }.getOrNull() }
+    }
+
+/**
+ * No-asset card per the new-user spec: no screenshot background — location
+ * name, a nerdy "cooking" line, and the card background acting as the
+ * progress bar (bright gradient gradually covered left→right by a darker
+ * translucent layer as generation progresses).
+ */
+@Composable
+private fun PendingDioramaCard(
+    name: String,
+    subtitle: String,
+    state: AssetState,
+    isSelected: Boolean,
+    isCurrentLocation: Boolean,
+    onDelete: (() -> Unit)? = null,
+) {
+    val cardShape = RoundedCornerShape(16.dp)
+    val borderModifier = if (isSelected) {
+        Modifier.border(width = 2.dp, color = MaterialTheme.colorScheme.primary, shape = cardShape)
+    } else {
+        Modifier
+    }
+    val progress = when (state) {
+        is AssetState.Generating -> state.progress.coerceIn(0.03f, 0.98f)
+        is AssetState.Failed -> 0f
+        AssetState.Missing -> 0.03f
+        is AssetState.Ready -> 1f
+    }
+    val fill by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = tween(durationMillis = 600),
+        label = "dioramaProgress",
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (isSelected) Modifier.height(160.dp) else Modifier.height(96.dp))
+            .then(borderModifier),
+        shape = cardShape,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Bright gradient base — the "to be covered" progress canvas
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.linearGradient(
+                            listOf(Color(0xFF46536B), Color(0xFF2A3342))
+                        )
+                    ),
+            )
+            // Darker translucent cover sliding in from the left = progress
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(fill)
+                    .background(Color(0xFF12161D).copy(alpha = 0.72f)),
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (isCurrentLocation) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Filled.Navigation,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = Color.White.copy(alpha = 0.8f),
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                "GPS",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.8f),
+                            )
+                        }
+                    } else {
+                        Spacer(Modifier.height(0.dp))
+                    }
+                    if (!isCurrentLocation && onDelete != null) {
+                        Icon(
+                            Icons.Filled.Delete,
+                            contentDescription = "Remove $name",
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clickable(onClick = { onDelete.invoke() }),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                Column {
+                    Text(
+                        text = DioramaHumor.forName(name, subtitle),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                        color = Color.White.copy(alpha = 0.85f),
+                    )
+                    if (state is AssetState.Failed) {
+                        Text(
+                            text = "Couldn't finish — will retry next launch",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = name,
+                        style = if (isSelected) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                    )
+                    if (subtitle.isNotBlank()) {
+                        Text(
+                            text = subtitle,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.7f),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
 
 /** T1's visual language: expanded selected card with diorama backdrop, compact unselected cards. */
 @Composable
