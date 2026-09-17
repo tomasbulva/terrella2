@@ -274,8 +274,11 @@ def run_job(jid):
                 # FLUX.1-schnell Space, pollinations fallback). Persisted to
                 # seeds/ so the concept is auditable and reusable.
                 set_stage(j, "concept")
-                r = run_step([PIPE_PY, str(PIPE_SCRIPTS / "step0_concept.py"),
-                              str(src_png), j["name"], j["country"]])
+                cmd = [PIPE_PY, str(PIPE_SCRIPTS / "step0_concept.py"),
+                       str(src_png), j["name"], j["country"]]
+                if j.get("lat") is not None:
+                    cmd.append(str(j["lat"]))  # geography-aware season note
+                r = run_step(cmd)
                 if cancelled():
                     return
                 if r.returncode != 0 or not src_png.exists():
