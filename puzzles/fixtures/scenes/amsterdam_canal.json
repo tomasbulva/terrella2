@@ -1,0 +1,1717 @@
+{
+ "schema": "terrella.puzzle_scene/1",
+ "diorama_id": "dio_nl_amsterdam_prinsengracht",
+ "recipe_hash": "sha256:7f1c0e2a9b",
+ "style": "nl_canal",
+ "landmarks": [
+  "westerkerk"
+ ],
+ "camera": {
+  "pitch_min": 10.0,
+  "pitch_max": 70.0,
+  "dist_min": 6.0,
+  "dist_max": 35.0
+ },
+ "entities": [
+  {
+   "id": "house_00",
+   "kind": "house",
+   "pos": [
+    0.0,
+    0,
+    0
+   ],
+   "tags": [
+    "building"
+   ],
+   "attrs": {
+    "color": "red",
+    "gable": "step",
+    "floors": 3
+   },
+   "kit_piece": "nl_canal.facade.step"
+  },
+  {
+   "id": "house_00_roof",
+   "kind": "roof",
+   "pos": [
+    0.0,
+    10.5,
+    0.5
+   ],
+   "tags": [],
+   "attrs": {},
+   "parent": "house_00",
+   "kit_piece": "nl_canal.roof.tiles"
+  },
+  {
+   "id": "house_00_chimney",
+   "kind": "chimney",
+   "pos": [
+    1.0,
+    11.5,
+    1.0
+   ],
+   "tags": [
+    "hide_spot"
+   ],
+   "attrs": {},
+   "parent": "house_00",
+   "kit_piece": "nl_canal.chimney.brick"
+  },
+  {
+   "id": "house_00_door",
+   "kind": "door",
+   "pos": [
+    0.0,
+    0.0,
+    -0.2
+   ],
+   "tags": [
+    "hide_spot"
+   ],
+   "attrs": {
+    "color": "green",
+    "lantern": true
+   },
+   "parent": "house_00",
+   "kit_piece": "nl_canal.door.stoep"
+  },
+  {
+   "id": "house_00_w00",
+   "kind": "window",
+   "pos": [
+    -1.2,
+    1.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 0,
+    "col": 0,
+    "shutters": "none",
+    "flower_box": false,
+    "curtains": "lace",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_00",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_00_w02",
+   "kind": "window",
+   "pos": [
+    1.2,
+    1.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 0,
+    "col": 2,
+    "shutters": "white",
+    "flower_box": false,
+    "curtains": "white",
+    "occupied": true,
+    "night_owl": true
+   },
+   "parent": "house_00",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_00_w10",
+   "kind": "window",
+   "pos": [
+    -1.2,
+    4.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 1,
+    "col": 0,
+    "shutters": "none",
+    "flower_box": false,
+    "curtains": "yellow",
+    "occupied": true,
+    "night_owl": true
+   },
+   "parent": "house_00",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_00_w11",
+   "kind": "window",
+   "pos": [
+    0.0,
+    4.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 1,
+    "col": 1,
+    "shutters": "none",
+    "flower_box": true,
+    "curtains": "white",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_00",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_00_w12",
+   "kind": "window",
+   "pos": [
+    1.2,
+    4.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 1,
+    "col": 2,
+    "shutters": "green",
+    "flower_box": true,
+    "curtains": "white",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_00",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_00_w20",
+   "kind": "window",
+   "pos": [
+    -1.2,
+    7.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 2,
+    "col": 0,
+    "shutters": "green",
+    "flower_box": true,
+    "curtains": "white",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_00",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_00_w21",
+   "kind": "window",
+   "pos": [
+    0.0,
+    7.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 2,
+    "col": 1,
+    "shutters": "white",
+    "flower_box": false,
+    "curtains": "lace",
+    "occupied": false,
+    "night_owl": false
+   },
+   "parent": "house_00",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_00_w22",
+   "kind": "window",
+   "pos": [
+    1.2,
+    7.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 2,
+    "col": 2,
+    "shutters": "none",
+    "flower_box": true,
+    "curtains": "yellow",
+    "occupied": true,
+    "night_owl": true
+   },
+   "parent": "house_00",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_01",
+   "kind": "house",
+   "pos": [
+    4.5,
+    0,
+    0
+   ],
+   "tags": [
+    "building"
+   ],
+   "attrs": {
+    "color": "blue",
+    "gable": "bell",
+    "floors": 2
+   },
+   "kit_piece": "nl_canal.facade.bell"
+  },
+  {
+   "id": "house_01_roof",
+   "kind": "roof",
+   "pos": [
+    4.5,
+    7.5,
+    0.5
+   ],
+   "tags": [],
+   "attrs": {},
+   "parent": "house_01",
+   "kit_piece": "nl_canal.roof.tiles"
+  },
+  {
+   "id": "house_01_door",
+   "kind": "door",
+   "pos": [
+    4.5,
+    0.0,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "color": "blue",
+    "lantern": false
+   },
+   "parent": "house_01",
+   "kit_piece": "nl_canal.door.stoep"
+  },
+  {
+   "id": "house_01_w00",
+   "kind": "window",
+   "pos": [
+    3.3,
+    1.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 0,
+    "col": 0,
+    "shutters": "white",
+    "flower_box": false,
+    "curtains": "yellow",
+    "occupied": false,
+    "night_owl": false
+   },
+   "parent": "house_01",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_01_w02",
+   "kind": "window",
+   "pos": [
+    5.7,
+    1.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 0,
+    "col": 2,
+    "shutters": "red",
+    "flower_box": true,
+    "curtains": "white",
+    "occupied": true,
+    "night_owl": true
+   },
+   "parent": "house_01",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_01_w10",
+   "kind": "window",
+   "pos": [
+    3.3,
+    4.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 1,
+    "col": 0,
+    "shutters": "white",
+    "flower_box": true,
+    "curtains": "blue",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_01",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_01_w11",
+   "kind": "window",
+   "pos": [
+    4.5,
+    4.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 1,
+    "col": 1,
+    "shutters": "red",
+    "flower_box": false,
+    "curtains": "yellow",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_01",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_01_w12",
+   "kind": "window",
+   "pos": [
+    5.7,
+    4.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 1,
+    "col": 2,
+    "shutters": "white",
+    "flower_box": false,
+    "curtains": "yellow",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_01",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_02",
+   "kind": "house",
+   "pos": [
+    9.0,
+    0,
+    0
+   ],
+   "tags": [
+    "building"
+   ],
+   "attrs": {
+    "color": "green",
+    "gable": "neck",
+    "floors": 4
+   },
+   "kit_piece": "nl_canal.facade.neck"
+  },
+  {
+   "id": "house_02_roof",
+   "kind": "roof",
+   "pos": [
+    9.0,
+    13.5,
+    0.5
+   ],
+   "tags": [],
+   "attrs": {},
+   "parent": "house_02",
+   "kit_piece": "nl_canal.roof.tiles"
+  },
+  {
+   "id": "house_02_chimney",
+   "kind": "chimney",
+   "pos": [
+    10.0,
+    14.5,
+    1.0
+   ],
+   "tags": [
+    "hide_spot"
+   ],
+   "attrs": {},
+   "parent": "house_02",
+   "kit_piece": "nl_canal.chimney.brick"
+  },
+  {
+   "id": "house_02_door",
+   "kind": "door",
+   "pos": [
+    9.0,
+    0.0,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "color": "blue",
+    "lantern": false
+   },
+   "parent": "house_02",
+   "kit_piece": "nl_canal.door.stoep"
+  },
+  {
+   "id": "house_02_w00",
+   "kind": "window",
+   "pos": [
+    7.8,
+    1.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 0,
+    "col": 0,
+    "shutters": "green",
+    "flower_box": false,
+    "curtains": "lace",
+    "occupied": false,
+    "night_owl": false
+   },
+   "parent": "house_02",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_02_w02",
+   "kind": "window",
+   "pos": [
+    10.2,
+    1.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 0,
+    "col": 2,
+    "shutters": "none",
+    "flower_box": true,
+    "curtains": "lace",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_02",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_02_w10",
+   "kind": "window",
+   "pos": [
+    7.8,
+    4.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 1,
+    "col": 0,
+    "shutters": "green",
+    "flower_box": false,
+    "curtains": "blue",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_02",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_02_w11",
+   "kind": "window",
+   "pos": [
+    9.0,
+    4.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 1,
+    "col": 1,
+    "shutters": "none",
+    "flower_box": false,
+    "curtains": "yellow",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_02",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_02_w12",
+   "kind": "window",
+   "pos": [
+    10.2,
+    4.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 1,
+    "col": 2,
+    "shutters": "white",
+    "flower_box": true,
+    "curtains": "yellow",
+    "occupied": false,
+    "night_owl": false
+   },
+   "parent": "house_02",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_02_w20",
+   "kind": "window",
+   "pos": [
+    7.8,
+    7.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 2,
+    "col": 0,
+    "shutters": "white",
+    "flower_box": true,
+    "curtains": "blue",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_02",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_02_w21",
+   "kind": "window",
+   "pos": [
+    9.0,
+    7.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 2,
+    "col": 1,
+    "shutters": "red",
+    "flower_box": true,
+    "curtains": "white",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_02",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_02_w22",
+   "kind": "window",
+   "pos": [
+    10.2,
+    7.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 2,
+    "col": 2,
+    "shutters": "red",
+    "flower_box": false,
+    "curtains": "yellow",
+    "occupied": false,
+    "night_owl": false
+   },
+   "parent": "house_02",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_02_w30",
+   "kind": "window",
+   "pos": [
+    7.8,
+    10.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 3,
+    "col": 0,
+    "shutters": "none",
+    "flower_box": true,
+    "curtains": "white",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_02",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_02_w31",
+   "kind": "window",
+   "pos": [
+    9.0,
+    10.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 3,
+    "col": 1,
+    "shutters": "red",
+    "flower_box": false,
+    "curtains": "lace",
+    "occupied": false,
+    "night_owl": false
+   },
+   "parent": "house_02",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_02_w32",
+   "kind": "window",
+   "pos": [
+    10.2,
+    10.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 3,
+    "col": 2,
+    "shutters": "red",
+    "flower_box": false,
+    "curtains": "lace",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_02",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_03",
+   "kind": "house",
+   "pos": [
+    13.5,
+    0,
+    0
+   ],
+   "tags": [
+    "building"
+   ],
+   "attrs": {
+    "color": "cream",
+    "gable": "cornice",
+    "floors": 2
+   },
+   "kit_piece": "nl_canal.facade.cornice"
+  },
+  {
+   "id": "house_03_roof",
+   "kind": "roof",
+   "pos": [
+    13.5,
+    7.5,
+    0.5
+   ],
+   "tags": [],
+   "attrs": {},
+   "parent": "house_03",
+   "kit_piece": "nl_canal.roof.tiles"
+  },
+  {
+   "id": "house_03_door",
+   "kind": "door",
+   "pos": [
+    13.5,
+    0.0,
+    -0.2
+   ],
+   "tags": [
+    "hide_spot"
+   ],
+   "attrs": {
+    "color": "red",
+    "lantern": false
+   },
+   "parent": "house_03",
+   "kit_piece": "nl_canal.door.stoep"
+  },
+  {
+   "id": "house_03_w00",
+   "kind": "window",
+   "pos": [
+    12.3,
+    1.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 0,
+    "col": 0,
+    "shutters": "green",
+    "flower_box": false,
+    "curtains": "lace",
+    "occupied": true,
+    "night_owl": true
+   },
+   "parent": "house_03",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_03_w10",
+   "kind": "window",
+   "pos": [
+    12.3,
+    4.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 1,
+    "col": 0,
+    "shutters": "white",
+    "flower_box": false,
+    "curtains": "white",
+    "occupied": true,
+    "night_owl": true
+   },
+   "parent": "house_03",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_03_w11",
+   "kind": "window",
+   "pos": [
+    14.7,
+    4.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 1,
+    "col": 1,
+    "shutters": "green",
+    "flower_box": true,
+    "curtains": "blue",
+    "occupied": false,
+    "night_owl": false
+   },
+   "parent": "house_03",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_04",
+   "kind": "house",
+   "pos": [
+    18.0,
+    0,
+    0
+   ],
+   "tags": [
+    "building"
+   ],
+   "attrs": {
+    "color": "brown",
+    "gable": "step",
+    "floors": 3
+   },
+   "kit_piece": "nl_canal.facade.step"
+  },
+  {
+   "id": "house_04_roof",
+   "kind": "roof",
+   "pos": [
+    18.0,
+    10.5,
+    0.5
+   ],
+   "tags": [],
+   "attrs": {},
+   "parent": "house_04",
+   "kit_piece": "nl_canal.roof.tiles"
+  },
+  {
+   "id": "house_04_chimney",
+   "kind": "chimney",
+   "pos": [
+    19.0,
+    11.5,
+    1.0
+   ],
+   "tags": [
+    "hide_spot"
+   ],
+   "attrs": {},
+   "parent": "house_04",
+   "kit_piece": "nl_canal.chimney.brick"
+  },
+  {
+   "id": "house_04_door",
+   "kind": "door",
+   "pos": [
+    18.0,
+    0.0,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "color": "green",
+    "lantern": true
+   },
+   "parent": "house_04",
+   "kit_piece": "nl_canal.door.stoep"
+  },
+  {
+   "id": "house_04_w00",
+   "kind": "window",
+   "pos": [
+    16.8,
+    1.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 0,
+    "col": 0,
+    "shutters": "red",
+    "flower_box": false,
+    "curtains": "yellow",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_04",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_04_w10",
+   "kind": "window",
+   "pos": [
+    16.8,
+    4.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 1,
+    "col": 0,
+    "shutters": "red",
+    "flower_box": false,
+    "curtains": "lace",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_04",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_04_w11",
+   "kind": "window",
+   "pos": [
+    19.2,
+    4.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 1,
+    "col": 1,
+    "shutters": "green",
+    "flower_box": false,
+    "curtains": "yellow",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_04",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_04_w20",
+   "kind": "window",
+   "pos": [
+    16.8,
+    7.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 2,
+    "col": 0,
+    "shutters": "red",
+    "flower_box": true,
+    "curtains": "lace",
+    "occupied": false,
+    "night_owl": false
+   },
+   "parent": "house_04",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_04_w21",
+   "kind": "window",
+   "pos": [
+    19.2,
+    7.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 2,
+    "col": 1,
+    "shutters": "red",
+    "flower_box": false,
+    "curtains": "yellow",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_04",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_05",
+   "kind": "house",
+   "pos": [
+    22.5,
+    0,
+    0
+   ],
+   "tags": [
+    "building"
+   ],
+   "attrs": {
+    "color": "black",
+    "gable": "bell",
+    "floors": 4
+   },
+   "kit_piece": "nl_canal.facade.bell"
+  },
+  {
+   "id": "house_05_roof",
+   "kind": "roof",
+   "pos": [
+    22.5,
+    13.5,
+    0.5
+   ],
+   "tags": [],
+   "attrs": {},
+   "parent": "house_05",
+   "kit_piece": "nl_canal.roof.tiles"
+  },
+  {
+   "id": "house_05_door",
+   "kind": "door",
+   "pos": [
+    22.5,
+    0.0,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "color": "black",
+    "lantern": false
+   },
+   "parent": "house_05",
+   "kit_piece": "nl_canal.door.stoep"
+  },
+  {
+   "id": "house_05_w00",
+   "kind": "window",
+   "pos": [
+    21.3,
+    1.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 0,
+    "col": 0,
+    "shutters": "red",
+    "flower_box": false,
+    "curtains": "blue",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_05",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_05_w02",
+   "kind": "window",
+   "pos": [
+    23.7,
+    1.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 0,
+    "col": 2,
+    "shutters": "none",
+    "flower_box": true,
+    "curtains": "yellow",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_05",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_05_w10",
+   "kind": "window",
+   "pos": [
+    21.3,
+    4.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 1,
+    "col": 0,
+    "shutters": "white",
+    "flower_box": false,
+    "curtains": "lace",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_05",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_05_w11",
+   "kind": "window",
+   "pos": [
+    22.5,
+    4.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 1,
+    "col": 1,
+    "shutters": "red",
+    "flower_box": false,
+    "curtains": "yellow",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_05",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_05_w12",
+   "kind": "window",
+   "pos": [
+    23.7,
+    4.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 1,
+    "col": 2,
+    "shutters": "green",
+    "flower_box": false,
+    "curtains": "blue",
+    "occupied": true,
+    "night_owl": true
+   },
+   "parent": "house_05",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_05_w20",
+   "kind": "window",
+   "pos": [
+    21.3,
+    7.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 2,
+    "col": 0,
+    "shutters": "none",
+    "flower_box": false,
+    "curtains": "blue",
+    "occupied": true,
+    "night_owl": true
+   },
+   "parent": "house_05",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_05_w21",
+   "kind": "window",
+   "pos": [
+    22.5,
+    7.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 2,
+    "col": 1,
+    "shutters": "green",
+    "flower_box": false,
+    "curtains": "yellow",
+    "occupied": false,
+    "night_owl": false
+   },
+   "parent": "house_05",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_05_w22",
+   "kind": "window",
+   "pos": [
+    23.7,
+    7.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 2,
+    "col": 2,
+    "shutters": "white",
+    "flower_box": true,
+    "curtains": "yellow",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_05",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_05_w30",
+   "kind": "window",
+   "pos": [
+    21.3,
+    10.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 3,
+    "col": 0,
+    "shutters": "none",
+    "flower_box": false,
+    "curtains": "yellow",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_05",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_05_w31",
+   "kind": "window",
+   "pos": [
+    22.5,
+    10.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 3,
+    "col": 1,
+    "shutters": "white",
+    "flower_box": false,
+    "curtains": "lace",
+    "occupied": false,
+    "night_owl": false
+   },
+   "parent": "house_05",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "house_05_w32",
+   "kind": "window",
+   "pos": [
+    23.7,
+    10.5,
+    -0.2
+   ],
+   "tags": [],
+   "attrs": {
+    "row": 3,
+    "col": 2,
+    "shutters": "none",
+    "flower_box": false,
+    "curtains": "blue",
+    "occupied": true,
+    "night_owl": false
+   },
+   "parent": "house_05",
+   "kit_piece": "nl_canal.window.sash"
+  },
+  {
+   "id": "lamp_0",
+   "kind": "lamp",
+   "pos": [
+    1.0,
+    0,
+    -2.5
+   ],
+   "tags": [],
+   "attrs": {
+    "style": "amsterdammertje"
+   },
+   "kit_piece": "nl_canal.lamp.cast_iron"
+  },
+  {
+   "id": "lamp_1",
+   "kind": "lamp",
+   "pos": [
+    7.0,
+    0,
+    -2.5
+   ],
+   "tags": [],
+   "attrs": {
+    "style": "amsterdammertje"
+   },
+   "kit_piece": "nl_canal.lamp.cast_iron"
+  },
+  {
+   "id": "lamp_2",
+   "kind": "lamp",
+   "pos": [
+    13.0,
+    0,
+    -2.5
+   ],
+   "tags": [],
+   "attrs": {
+    "style": "amsterdammertje"
+   },
+   "kit_piece": "nl_canal.lamp.cast_iron"
+  },
+  {
+   "id": "lamp_3",
+   "kind": "lamp",
+   "pos": [
+    19.0,
+    0,
+    -2.5
+   ],
+   "tags": [],
+   "attrs": {
+    "style": "amsterdammertje"
+   },
+   "kit_piece": "nl_canal.lamp.cast_iron"
+  },
+  {
+   "id": "lamp_4",
+   "kind": "lamp",
+   "pos": [
+    25.0,
+    0,
+    -2.5
+   ],
+   "tags": [],
+   "attrs": {
+    "style": "amsterdammertje"
+   },
+   "kit_piece": "nl_canal.lamp.cast_iron"
+  },
+  {
+   "id": "tree_0",
+   "kind": "tree",
+   "pos": [
+    4.0,
+    0,
+    -2.8
+   ],
+   "tags": [],
+   "attrs": {
+    "species": "elm",
+    "deciduous": true,
+    "blossom": true
+   },
+   "kit_piece": "nl_canal.tree.elm"
+  },
+  {
+   "id": "tree_1",
+   "kind": "tree",
+   "pos": [
+    10.0,
+    0,
+    -2.8
+   ],
+   "tags": [
+    "hide_spot"
+   ],
+   "attrs": {
+    "species": "elm",
+    "deciduous": true,
+    "blossom": false
+   },
+   "kit_piece": "nl_canal.tree.elm"
+  },
+  {
+   "id": "tree_2",
+   "kind": "tree",
+   "pos": [
+    16.0,
+    0,
+    -2.8
+   ],
+   "tags": [
+    "notable"
+   ],
+   "attrs": {
+    "species": "elm",
+    "deciduous": true,
+    "blossom": false
+   },
+   "kit_piece": "nl_canal.tree.elm"
+  },
+  {
+   "id": "tree_3",
+   "kind": "tree",
+   "pos": [
+    22.0,
+    0,
+    -2.8
+   ],
+   "tags": [
+    "hide_spot"
+   ],
+   "attrs": {
+    "species": "elm",
+    "deciduous": true,
+    "blossom": false
+   },
+   "kit_piece": "nl_canal.tree.elm"
+  },
+  {
+   "id": "bollard_0",
+   "kind": "bollard",
+   "pos": [
+    0.5,
+    0,
+    -3.6
+   ],
+   "tags": [],
+   "attrs": {},
+   "kit_piece": "nl_canal.bollard"
+  },
+  {
+   "id": "bollard_1",
+   "kind": "bollard",
+   "pos": [
+    4.5,
+    0,
+    -3.6
+   ],
+   "tags": [
+    "hide_spot"
+   ],
+   "attrs": {},
+   "kit_piece": "nl_canal.bollard"
+  },
+  {
+   "id": "bollard_2",
+   "kind": "bollard",
+   "pos": [
+    8.5,
+    0,
+    -3.6
+   ],
+   "tags": [],
+   "attrs": {},
+   "kit_piece": "nl_canal.bollard"
+  },
+  {
+   "id": "bollard_3",
+   "kind": "bollard",
+   "pos": [
+    12.5,
+    0,
+    -3.6
+   ],
+   "tags": [],
+   "attrs": {},
+   "kit_piece": "nl_canal.bollard"
+  },
+  {
+   "id": "bollard_4",
+   "kind": "bollard",
+   "pos": [
+    16.5,
+    0,
+    -3.6
+   ],
+   "tags": [
+    "hide_spot"
+   ],
+   "attrs": {},
+   "kit_piece": "nl_canal.bollard"
+  },
+  {
+   "id": "bollard_5",
+   "kind": "bollard",
+   "pos": [
+    20.5,
+    0,
+    -3.6
+   ],
+   "tags": [],
+   "attrs": {},
+   "kit_piece": "nl_canal.bollard"
+  },
+  {
+   "id": "bollard_6",
+   "kind": "bollard",
+   "pos": [
+    24.5,
+    0,
+    -3.6
+   ],
+   "tags": [
+    "hide_spot"
+   ],
+   "attrs": {},
+   "kit_piece": "nl_canal.bollard"
+  },
+  {
+   "id": "bike_0",
+   "kind": "bike",
+   "pos": [
+    2.2,
+    0,
+    -2.0
+   ],
+   "tags": [],
+   "attrs": {
+    "color": "mint",
+    "basket": false
+   },
+   "kit_piece": "nl_canal.bike.omafiets"
+  },
+  {
+   "id": "bike_1",
+   "kind": "bike",
+   "pos": [
+    7.2,
+    0,
+    -2.0
+   ],
+   "tags": [],
+   "attrs": {
+    "color": "red",
+    "basket": true
+   },
+   "kit_piece": "nl_canal.bike.omafiets"
+  },
+  {
+   "id": "bike_2",
+   "kind": "bike",
+   "pos": [
+    12.2,
+    0,
+    -2.0
+   ],
+   "tags": [],
+   "attrs": {
+    "color": "black",
+    "basket": false
+   },
+   "kit_piece": "nl_canal.bike.omafiets"
+  },
+  {
+   "id": "bike_3",
+   "kind": "bike",
+   "pos": [
+    17.2,
+    0,
+    -2.0
+   ],
+   "tags": [
+    "hide_spot"
+   ],
+   "attrs": {
+    "color": "mint",
+    "basket": false
+   },
+   "kit_piece": "nl_canal.bike.omafiets"
+  },
+  {
+   "id": "bike_4",
+   "kind": "bike",
+   "pos": [
+    22.2,
+    0,
+    -2.0
+   ],
+   "tags": [],
+   "attrs": {
+    "color": "black",
+    "basket": false
+   },
+   "kit_piece": "nl_canal.bike.omafiets"
+  },
+  {
+   "id": "planter_0",
+   "kind": "planter",
+   "pos": [
+    3.0,
+    0,
+    -1.2
+   ],
+   "tags": [
+    "hide_spot"
+   ],
+   "attrs": {
+    "color": "white"
+   },
+   "kit_piece": "nl_canal.planter"
+  },
+  {
+   "id": "planter_1",
+   "kind": "planter",
+   "pos": [
+    12.0,
+    0,
+    -1.2
+   ],
+   "tags": [
+    "hide_spot"
+   ],
+   "attrs": {
+    "color": "terracotta"
+   },
+   "kit_piece": "nl_canal.planter"
+  },
+  {
+   "id": "planter_2",
+   "kind": "planter",
+   "pos": [
+    21.0,
+    0,
+    -1.2
+   ],
+   "tags": [
+    "hide_spot"
+   ],
+   "attrs": {
+    "color": "blue"
+   },
+   "kit_piece": "nl_canal.planter"
+  },
+  {
+   "id": "bench_0",
+   "kind": "bench",
+   "pos": [
+    6.5,
+    0,
+    -2.6
+   ],
+   "tags": [],
+   "attrs": {
+    "color": "brown"
+   },
+   "kit_piece": "nl_canal.bench"
+  },
+  {
+   "id": "bench_1",
+   "kind": "bench",
+   "pos": [
+    15.5,
+    0,
+    -2.6
+   ],
+   "tags": [
+    "hide_spot"
+   ],
+   "attrs": {
+    "color": "brown"
+   },
+   "kit_piece": "nl_canal.bench"
+  },
+  {
+   "id": "bench_2",
+   "kind": "bench",
+   "pos": [
+    24.5,
+    0,
+    -2.6
+   ],
+   "tags": [],
+   "attrs": {
+    "color": "brown"
+   },
+   "kit_piece": "nl_canal.bench"
+  },
+  {
+   "id": "boat_0",
+   "kind": "boat",
+   "pos": [
+    5.0,
+    -0.6,
+    -5.5
+   ],
+   "tags": [
+    "hide_spot",
+    "notable"
+   ],
+   "attrs": {
+    "color": "blue",
+    "moored": true
+   },
+   "kit_piece": "nl_canal.boat.sloop"
+  },
+  {
+   "id": "boat_1",
+   "kind": "boat",
+   "pos": [
+    14.0,
+    -0.6,
+    -6.0
+   ],
+   "tags": [],
+   "attrs": {
+    "color": "red",
+    "moored": false
+   },
+   "kit_piece": "nl_canal.boat.sloop"
+  },
+  {
+   "id": "boat_2",
+   "kind": "boat",
+   "pos": [
+    21.0,
+    -0.6,
+    -5.2
+   ],
+   "tags": [
+    "hide_spot"
+   ],
+   "attrs": {
+    "color": "green",
+    "moored": true
+   },
+   "kit_piece": "nl_canal.boat.houseboat"
+  },
+  {
+   "id": "westerkerk",
+   "kind": "church",
+   "pos": [
+    11.0,
+    0,
+    9.0
+   ],
+   "tags": [
+    "notable",
+    "landmark"
+   ],
+   "attrs": {
+    "name": "Westerkerk"
+   },
+   "kit_piece": "landmark.westerkerk"
+  }
+ ]
+}

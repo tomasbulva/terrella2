@@ -80,10 +80,14 @@ def to_single_mesh(parts: list[Part], palette: bytes) -> trimesh.Trimesh:
                            visual=visual, process=False)
 
 
-def write_glb(mesh: trimesh.Trimesh, name: str, path: Path) -> bytes:
-    scene = trimesh.Scene()
-    scene.add_geometry(mesh, node_name=name, geom_name=name)
-    data = scene.export(file_type="glb", include_normals=True)
+def write_glb(mesh: trimesh.Trimesh, name: str, path: Path, palette: bytes) -> bytes:
+    """Single-node GLB via our own writer (trimesh can't emit TANGENT/TEXCOORD_1)."""
+    from .gltf import Node, PieceMesh, write_scene
+    uv = np.asarray(mesh.visual.uv, dtype=np.float32).copy()
+    uv[:, 1] = 1.0 - uv[:, 1]                     # trimesh (bottom-left) -> glTF (top-left)
+    pm = PieceMesh(positions=np.asarray(mesh.vertices, np.float32), normals=np.asarray(mesh.vertex_normals, np.float32),
+                   uvs=uv, indices=np.asarray(mesh.faces, np.uint32).reshape(-1), image_png=palette)
+    data = write_scene(Node(name, mesh=name), {name: pm}, palette)
     path.write_bytes(data)
     return data
 

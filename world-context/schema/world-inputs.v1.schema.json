@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/tomasbulva/terrella2/world-context/schema/world-inputs.v1.schema.json",
+  "title": "Terrella world inputs v1",
+  "description": "The persisted cache the client keeps (one small JSON file). Everything slow or costly to obtain lives here; the scene state is recomputed from it locally.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "location"
+  ],
+  "properties": {
+    "schema": {
+      "const": "terrella.world_inputs"
+    },
+    "version": {
+      "const": 1
+    },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lat",
+        "lon"
+      ],
+      "properties": {
+        "lat": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "lon": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "source": {
+          "enum": [
+            "device",
+            "manual",
+            "timezone"
+          ]
+        },
+        "utc_offset_s": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "Device timezone offset now. Null: use the weather provider's offset."
+        },
+        "updated_at": {
+          "type": "integer"
+        }
+      }
+    },
+    "weather": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "provider",
+            "fetched_at",
+            "lat",
+            "lon",
+            "elevation_m",
+            "utc_offset_s",
+            "samples"
+          ],
+          "properties": {
+            "provider": {
+              "type": "string"
+            },
+            "fetched_at": {
+              "type": "integer"
+            },
+            "lat": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            },
+            "lon": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            },
+            "elevation_m": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "utc_offset_s": {
+              "type": "integer"
+            },
+            "samples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "t",
+                  "code"
+                ],
+                "properties": {
+                  "t": {
+                    "type": "integer"
+                  },
+                  "temp_c": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "rh": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "code": {
+                    "type": "integer"
+                  },
+                  "cloud": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "precip_mm_h": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "snowfall_cm_h": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "snow_depth_m": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "wind_ms": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "wind_dir_deg": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 360
+                  },
+                  "visibility_m": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": 0
+                  },
+                  "current": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "description": "Sorted by t. Hourly samples (rates per hour over the preceding hour) plus one `current` sample."
+            }
+          }
+        }
+      ]
+    }
+  }
+}

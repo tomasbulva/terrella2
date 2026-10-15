@@ -17,7 +17,6 @@ that was actually generated in this job; cache hits cost nothing.
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import socket
 import tempfile
@@ -34,17 +33,13 @@ from .spec import ROLES, load_kit
 KINDS = ["kit.build", "diorama.build"]
 
 
-def _get_or_create(c: CatalogClient, body: dict, blob: bytes | None = None, content_type: str = "application/octet-stream",
-                   result: bool = False) -> dict:
-    """Inputs (style spec, atlas, concept image) are reused across jobs when the
-    content is identical. Results are reused only within the same job (a
-    retry), because the catalog requires a job's results to belong to it; a
-    cache-hit rebuild therefore mints a new version with zero cost."""
+def _create(c: CatalogClient, body: dict, blob: bytes | None = None, content_type: str = "application/octet-stream") -> dict:
+    """POST /assets. The catalog dedupes: if the latest version of (kind, slug)
+    has the same blob and spec it returns that asset (reused=true), which a
+    job may list as a result. So rebuilding an unchanged kit mints nothing."""
     if blob is not None:
         body["blob_sha256"] = c.put_blob(blob, content_type)
-    found = c.find_asset(body["kind"], body["slug"], body.get("blob_sha256"), body.get("spec"),
-                         job_id=body.get("job_id") if result else None)
-    return found or c.create_asset(body)
+    return c.create_asset(body)
 
 
 def _style_spec_body(kit) -> dict:
@@ -67,7 +62,7 @@ def run_kit_build(c: CatalogClient, job: dict, cache: Path, tmp: Path) -> list[s
 
     c.progress(jid, "style_spec", 0.02)
     spec_body = _style_spec_body(kit)
-    style = _get_or_create(c, {
+    style = _create(c, {
         "kind": "style_spec", "slug": f"{kit.name}.style", "style_family": kit.name, "spec": spec_body,
         "provenance": {"producer": kit.style.source.get("kind", "hand-authored"), **{
             k: v for k, v in kit.style.source.items() if k != "kind"}},
@@ -79,7 +74,7 @@ def run_kit_build(c: CatalogClient, job: dict, cache: Path, tmp: Path) -> list[s
     manifests = build_kit(raw, out, Path(__file__).resolve().parents[1] / "prices.toml",
                           user_id=job["user_id"], job_id=jid, only=only, log=lambda *_: None)
     palette = (out / "kits" / kit.name / "palette.png").read_bytes()
-    atlas = _get_or_create(c, {
+    atlas = _create(c, {
         "kind": "atlas", "slug": f"{kit.name}.palette", "style_family": kit.name,
         "meta": {"layout": json.loads((out / "kits" / kit.name / "kit.json").read_text())["palette_layout"]},
         "provenance": {"producer": "terrella_assets.palette", "model_version": __version__},
@@ -93,7 +88,7 @@ def run_kit_build(c: CatalogClient, job: dict, cache: Path, tmp: Path) -> list[s
         parents = [{"asset_id": atlas["id"], "role": "atlas"}, {"asset_id": style["id"], "role": "style"}]
         concept = out / prov["work_dir"] / "concept.png"
         if "prompt" in prov and concept.exists():
-            seed_img = _get_or_create(c, {
+            seed_img = _create(c, {
                 "kind": "seed_image", "slug": f"{m['slug']}.concept", "style_family": kit.name,
                 "provenance": {"producer": prov["image"]["provider"], "model": prov["image"]["model"],
                                "prompt": prov["prompt"], "seed": prov.get("seed")},
@@ -101,12 +96,8 @@ def run_kit_build(c: CatalogClient, job: dict, cache: Path, tmp: Path) -> list[s
             }, concept.read_bytes(), "image/png")
             parents.append({"asset_id": seed_img["id"], "role": "concept"})
         glb = (out / m["files"]["glb"]).read_bytes()
-        prev = c.find_asset("kit_piece", m["slug"], hashlib.sha256(glb).hexdigest())
-        if prev is not None and prev.get("job_id") != jid:
-            # Same bytes built earlier: link it so lineage cost still reaches the original spend.
-            parents.append({"asset_id": prev["id"], "role": "rebuild_of"})
         mesh_prov = prov.get("mesh", {})
-        asset = _get_or_create(c, {
+        asset = _create(c, {
             "kind": "kit_piece", "slug": m["slug"], "style_family": kit.name, "category": m["category"],
             "tags": m["tags"],
             "meta": {k: m[k] for k in ("geometry_hash", "palette_hash", "recipe", "stats", "validation", "pivot",
@@ -120,7 +111,7 @@ def run_kit_build(c: CatalogClient, job: dict, cache: Path, tmp: Path) -> list[s
                 **({"script_sha256": prov["script_sha256"]} if "script_sha256" in prov else {}),
             },
             "parents": parents, "job_id": jid,
-        }, glb, "model/gltf-binary", result=True)
+        }, glb, "model/gltf-binary")
         if not m["cost"]["cache_hit"]:
             for u in m["cost"]["usage"]:
                 if u["provider"] != "local":
@@ -168,7 +159,7 @@ def run_diorama_build(c: CatalogClient, job: dict, cache: Path, tmp: Path) -> li
     c.progress(jid, "upload", 0.9)
     parents = [{"asset_id": ids[s], "role": "kit"} for s in m["kit_pieces"] if s in ids]
     parents.append({"asset_id": style["id"], "role": "style"})
-    asset = _get_or_create(c, {
+    asset = _create(c, {
         "kind": "diorama_build", "slug": f"{diorama_id}.build",
         "style_family": kit_family, "recipe_hash": h,
         "meta": {"puzzle_scene": {"sha256": scene_sha, "schema": "terrella.puzzle_scene/1"},
@@ -177,7 +168,7 @@ def run_diorama_build(c: CatalogClient, job: dict, cache: Path, tmp: Path) -> li
                        "model_version": LAYOUT_VERSION, "seed": body["seed"], "params": body.get("params", {}),
                        "inputs": [f"osm:{body['osm']['extract_id']}"], "pipeline_version": __version__},
         "parents": parents, "job_id": jid,
-    }, (out / m["files"]["glb"]).read_bytes(), "model/gltf-binary", result=True)
+    }, (out / m["files"]["glb"]).read_bytes(), "model/gltf-binary")
     return [asset["id"]]
 
 

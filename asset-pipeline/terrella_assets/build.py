@@ -106,7 +106,7 @@ def build_kit(kit_src: str | Path | dict, out: str | Path, prices_path: str | Pa
         mesh = to_single_mesh(parts, palette)
         adir = out / "assets" / asset_id
         adir.mkdir(parents=True, exist_ok=True)
-        glb = write_glb(mesh, req.name, adir / "piece.glb")
+        glb = write_glb(mesh, req.name, adir / "piece.glb", palette)
         v = validate(parts, mesh, req)
         if not v["ok"]:
             log(f"  {req.name:<18} INVALID: {'; '.join(v['issues'])}")

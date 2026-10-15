@@ -76,18 +76,13 @@ def test_worker_contract(catalog, tmp_path):
     n_entries = len(entries)
     assert n_entries == 2                                                  # image + mesh, nothing local
 
-    # Re-running the same kit: cache hits and no new spend. The catalog only
-    # accepts a job's own assets as results, so pieces come back as new
-    # versions of the same slugs with identical blobs.
+    # Re-running the same kit: cache hits, no new spend, and the catalog hands
+    # back the identical latest versions (reused) instead of minting new ones.
     job2 = _enqueue(user, "kit.build", {"kit": KIT})
     run_once(worker, "w1", cache=cache)
     job2 = user._req("GET", f"/jobs/{job2['id']}", "job").json()
     assert job2["status"] == "succeeded", job2["error"]
-    again = {worker.get_asset(i)["slug"]: worker.get_asset(i) for i in job2["result_asset_ids"]}
-    assert set(again) == set(pieces)
-    assert all(again[s]["blob"]["sha256"] == pieces[s]["blob"]["sha256"] for s in pieces)
-    cost = user._req("GET", f"/assets/{again['nl_canal.planter.ai']['id']}/cost", "cost").json()
-    assert cost["direct_usd"] == 0 and cost["lineage_usd"] == pytest.approx(0.34)   # via rebuild_of
+    assert sorted(job2["result_asset_ids"]) == sorted(job["result_asset_ids"])
     assert len(user._req("GET", "/ledger/entries", "entries").json()) == n_entries
 
     # Diorama from a registered recipe.

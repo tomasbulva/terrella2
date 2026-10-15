@@ -1,0 +1,531 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/tomasbulva/terrella2/world-context/schema/scene-state.v1.schema.json",
+  "title": "Terrella scene state v1",
+  "description": "Everything a renderer needs to light and dress the diorama for one moment. Derived (pure) from world-inputs + a timestamp + a palette. Scene space: +Y up, +X east, -Z north. Colors are sRGB 0..1. Intensities are unitless multipliers tuned by the palette (1.0 = clear midday sun).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "time",
+    "location",
+    "sun",
+    "moon",
+    "light",
+    "sky",
+    "weather",
+    "surface",
+    "season",
+    "meta"
+  ],
+  "$defs": {
+    "vec3": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "rgb": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "azimuth_deg",
+        "elevation_deg",
+        "direction"
+      ],
+      "properties": {
+        "azimuth_deg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 360,
+          "description": "Clockwise from true north"
+        },
+        "elevation_deg": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90,
+          "description": "Above horizon, refraction included"
+        },
+        "direction": {
+          "$ref": "#/$defs/vec3",
+          "description": "Unit vector from the scene toward the body. A directional light points along -direction."
+        }
+      }
+    }
+  },
+  "properties": {
+    "schema": {
+      "const": "terrella.scene_state"
+    },
+    "version": {
+      "const": 1,
+      "description": "Bumped only on breaking changes. New optional fields may appear without a bump: consumers must ignore fields they do not know. (additionalProperties is false here so producer tests catch typos.)"
+    },
+    "time": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "utc",
+        "local",
+        "utc_offset_s",
+        "local_hours",
+        "day_phase",
+        "sunrise",
+        "solar_noon",
+        "sunset",
+        "polar"
+      ],
+      "properties": {
+        "utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "local": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "utc_offset_s": {
+          "type": "integer"
+        },
+        "local_hours": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 24
+        },
+        "day_phase": {
+          "enum": [
+            "night",
+            "astronomical_twilight",
+            "nautical_twilight",
+            "civil_twilight",
+            "golden_hour",
+            "day"
+          ],
+          "description": "From sun elevation: <-18, <-12, <-6, <-0.833, <6, else day. Same names for dawn and dusk; use sun.azimuth or local_hours to tell them apart."
+        },
+        "sunrise": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "solar_noon": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sunset": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "polar": {
+          "enum": [
+            null,
+            "night",
+            "day"
+          ],
+          "description": "Set when the sun never rises / never sets on this local day; sunrise and sunset are then null."
+        }
+      }
+    },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lat",
+        "lon",
+        "source"
+      ],
+      "properties": {
+        "lat": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "lon": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "source": {
+          "enum": [
+            "device",
+            "manual",
+            "timezone"
+          ]
+        }
+      },
+      "description": "Coarse (about 5 km grid). Never the precise fix."
+    },
+    "sun": {
+      "$ref": "#/$defs/body"
+    },
+    "moon": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "azimuth_deg",
+        "elevation_deg",
+        "direction",
+        "phase",
+        "illumination"
+      ],
+      "properties": {
+        "azimuth_deg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 360
+        },
+        "elevation_deg": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "direction": {
+          "$ref": "#/$defs/vec3"
+        },
+        "phase": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "0 new, 0.25 first quarter, 0.5 full, 0.75 last quarter"
+        },
+        "illumination": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Illuminated fraction of the disc"
+        }
+      }
+    },
+    "light": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "ambient"
+      ],
+      "properties": {
+        "key": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "direction",
+            "color",
+            "intensity",
+            "shadow_strength"
+          ],
+          "properties": {
+            "source": {
+              "enum": [
+                "sun",
+                "moon"
+              ]
+            },
+            "direction": {
+              "$ref": "#/$defs/vec3"
+            },
+            "color": {
+              "$ref": "#/$defs/rgb"
+            },
+            "intensity": {
+              "type": "number",
+              "minimum": 0
+            },
+            "shadow_strength": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Suggested shadow opacity; soft/none under overcast"
+            }
+          },
+          "description": "The single shadow-casting directional light. Whichever of sun or moon is brighter."
+        },
+        "ambient": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "color",
+            "intensity"
+          ],
+          "properties": {
+            "color": {
+              "$ref": "#/$defs/rgb"
+            },
+            "intensity": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "sky": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zenith",
+        "horizon",
+        "star_visibility"
+      ],
+      "properties": {
+        "zenith": {
+          "$ref": "#/$defs/rgb"
+        },
+        "horizon": {
+          "$ref": "#/$defs/rgb"
+        },
+        "star_visibility": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "weather": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "condition",
+        "wmo_code",
+        "cloud_cover",
+        "precipitation",
+        "thunder",
+        "fog_density",
+        "visibility_m",
+        "wind",
+        "temperature_c",
+        "humidity"
+      ],
+      "properties": {
+        "condition": {
+          "enum": [
+            "clear",
+            "partly_cloudy",
+            "overcast",
+            "fog",
+            "drizzle",
+            "rain",
+            "snow",
+            "thunderstorm"
+          ]
+        },
+        "wmo_code": {
+          "type": "integer",
+          "description": "Raw WMO 4677 code from the provider, for anything the condition enum flattens"
+        },
+        "cloud_cover": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "precipitation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "intensity",
+            "rate_mm_h"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "none",
+                "rain",
+                "snow",
+                "sleet"
+              ]
+            },
+            "intensity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Visual intensity for particle density; ~sqrt of the rate"
+            },
+            "rate_mm_h": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "thunder": {
+          "type": "boolean"
+        },
+        "fog_density": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Artistic 0..1 from visibility and condition"
+        },
+        "visibility_m": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "wind": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "speed_ms",
+            "from_deg",
+            "vector_xz",
+            "strength"
+          ],
+          "properties": {
+            "speed_ms": {
+              "type": "number",
+              "minimum": 0
+            },
+            "from_deg": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 360,
+              "description": "Meteorological: direction the wind comes FROM"
+            },
+            "vector_xz": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2,
+              "description": "Direction the wind blows TOWARD in scene XZ, m/s"
+            },
+            "strength": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "speed / 15 m/s, for foliage sway and particle drift"
+            }
+          }
+        },
+        "temperature_c": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 60
+        },
+        "humidity": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wetness",
+        "snow_cover"
+      ],
+      "properties": {
+        "wetness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Puddles/specular; decays ~2.5 h after rain"
+        },
+        "snow_cover": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Ground/roof snow; 1.0 at >= 3 cm depth"
+        }
+      }
+    },
+    "season": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "year_phase",
+        "foliage",
+        "autumn_tint"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "winter",
+            "spring",
+            "summer",
+            "autumn",
+            "tropical"
+          ]
+        },
+        "year_phase": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Hemisphere-adjusted: 0 winter solstice, 0.25 spring equinox, 0.5 summer solstice, 0.75 autumn equinox"
+        },
+        "foliage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Leaf amount on deciduous trees"
+        },
+        "autumn_tint": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "weather_age_min",
+        "weather_valid_until"
+      ],
+      "properties": {
+        "source": {
+          "enum": [
+            "live",
+            "forecast",
+            "fallback",
+            "override"
+          ],
+          "description": "live: weather fetched < 90 min ago. forecast: from the cached 48 h timeline. fallback: no usable weather, seasonal defaults. override: weather forced by the app."
+        },
+        "weather_age_min": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "weather_valid_until": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "terrella.context_rules/1",
+  "note": "Shared by renderer and puzzle library. Rules apply in order; later rules overwrite earlier ones.",
+  "rules": [
+    {"when": {}, "match": {"kind": ["lamp"]}, "set": {"lit": false}},
+    {"when": {}, "match": {"kind": ["window"]}, "set": {"lit": false}},
+    {"when": {"phase": ["dusk", "night"]}, "match": {"kind": ["lamp"]}, "set": {"lit": true}},
+    {"when": {"weather": ["fog", "storm"]}, "match": {"kind": ["lamp"]}, "set": {"lit": true}},
+    {"when": {"phase": ["dusk", "night", "dawn"]}, "match": {"kind": ["window"], "attrs": {"occupied": true}}, "set": {"lit": true}},
+    {"when": {"phase": ["night"]}, "match": {"kind": ["window"], "attrs": {"night_owl": false}}, "set": {"lit": false}},
+    {"when": {}, "match": {"kind": ["roof"]}, "set": {"snowy": false}},
+    {"when": {"weather": ["snow"]}, "match": {"kind": ["roof"]}, "set": {"snowy": true}},
+    {"when": {"snow_cover": true}, "match": {"kind": ["roof"]}, "set": {"snowy": true}},
+    {"when": {}, "match": {"kind": ["tree"]}, "set": {"foliage": "green"}},
+    {"when": {"season": ["autumn"]}, "match": {"kind": ["tree"], "attrs": {"deciduous": true}}, "set": {"foliage": "orange"}},
+    {"when": {"season": ["winter"]}, "match": {"kind": ["tree"], "attrs": {"deciduous": true}}, "set": {"foliage": "bare"}},
+    {"when": {"season": ["spring"]}, "match": {"kind": ["tree"], "attrs": {"blossom": true}}, "set": {"foliage": "blossom"}},
+    {"when": {}, "match": {"kind": ["bike", "boat"]}, "set": {"present": true}},
+    {"when": {"weather": ["storm"]}, "match": {"kind": ["boat"], "attrs": {"moored": false}}, "set": {"present": false}}
+  ]
+}

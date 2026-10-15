@@ -161,3 +161,20 @@ generator = "blender"
     assert m["validation"]["ok"], m["validation"]
     assert set(m["stats"]["roles"]) == {"metal", "glass"}
     assert m["stats"]["extent_m"][1] > 3.0
+
+
+def test_tangents_and_uv2_are_usable(tmp_path):
+    """Palette UVs are constant per face, so engines can't derive tangents
+    from UV0 (Godot gives NaN and normal-mapped faces go white). Every GLB
+    ships explicit tangents consistent with a varying TEXCOORD_1."""
+    from terrella_assets.gltf import read_piece
+    ms = build(tmp_path, kit(tmp_path))
+    for m in ms.values():
+        pm = read_piece((tmp_path / "out" / m["files"]["glb"]).read_bytes())
+        t, n = pm.tangents, pm.normals / np.linalg.norm(pm.normals, axis=1, keepdims=True)
+        assert np.isfinite(t).all() and np.isfinite(pm.uv2).all()
+        assert np.allclose(np.linalg.norm(t[:, :3], axis=1), 1, atol=1e-4)
+        assert np.abs(np.einsum("ij,ij->i", t[:, :3], n)).max() < 1e-3
+        assert set(np.unique(t[:, 3])) <= {-1.0, 1.0}
+        tri = pm.indices.reshape(-1, 3)
+        assert (np.ptp(pm.uv2[tri], axis=1).max(axis=1) > 0).mean() > 0.95   # UV2 varies across faces

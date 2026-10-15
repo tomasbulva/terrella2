@@ -1,0 +1,129 @@
+{
+  "schema": "terrella.diorama_build/1",
+  "diorama_id": "dio_nl_synthetic_canal",
+  "recipe_hash": "d642444a1b609ab8df35477f76c17a08ce492f15a623fde199ce7d736e69b1ee",
+  "recipe": {
+    "generator": {
+      "name": "canal_street",
+      "version": "0.1.0"
+    },
+    "osm": {
+      "extract_id": "synthetic"
+    },
+    "style_spec_id": "local:17bfd08583c41658ee70",
+    "kit": [
+      "0d1d727da0cda52a3e91",
+      "1034ea5b48bceae656f9",
+      "1a21017c689630d4bc77",
+      "2e0a43e7b0495f18ff32",
+      "3652d6bd9b219df93bb0",
+      "52ff7f75ba8116f23715",
+      "664e276e1e2531e7b32e",
+      "66e1762c9816711a92f8",
+      "67f20b117f88555e8502",
+      "6df76a78613e0d0903bb",
+      "70d1e5cc4a6b63bc422e",
+      "71dab5ac6e269f6a9557",
+      "7261bd38ff7d590f89d6",
+      "7b5011aa1901971671d8",
+      "7cae29afd19fc5a8717b",
+      "7d1b3655648fa47f5927",
+      "85d99bbca5c9054ab74a",
+      "b37a5c42481879d7dad8",
+      "b3c1089be39f797950e7",
+      "b3f525bcc8a4794293fd",
+      "bb6e859860d94fcbf3f8",
+      "c7f95373ea3da5c52bb4",
+      "dc5fd8008e43e9804d20",
+      "f50a877297c9d74ba885",
+      "fee0fdeaa7c14b4aeb3e"
+    ],
+    "seed": 7,
+    "params": {
+      "houses": 6,
+      "boats": 2
+    }
+  },
+  "layout": {
+    "name": "canal_street",
+    "version": "0.1.0"
+  },
+  "files": {
+    "glb": "dioramas/dio_nl_synthetic_canal/d642444a1b609ab8df35/diorama.glb",
+    "glb_sha256": "83eb03fa184219f62fe563e24f6827e279ae21958e51fdc74c64fb59b1258156",
+    "glb_bytes": 316492,
+    "puzzle_scene": "dioramas/dio_nl_synthetic_canal/d642444a1b609ab8df35/puzzle_scene.json"
+  },
+  "kit_pieces": [
+    "nl_canal.bike.omafiets",
+    "nl_canal.boat.sloop",
+    "nl_canal.bollard",
+    "nl_canal.chimney.brick",
+    "nl_canal.door.plain",
+    "nl_canal.door.stoep",
+    "nl_canal.facade.brick",
+    "nl_canal.facade.dark",
+    "nl_canal.facade.green",
+    "nl_canal.facade.white",
+    "nl_canal.gable.bell",
+    "nl_canal.gable.step",
+    "nl_canal.lamp.lantern",
+    "nl_canal.lamp.street",
+    "nl_canal.planter.ai",
+    "nl_canal.roof.gable",
+    "nl_canal.slab.ground",
+    "nl_canal.slab.stone",
+    "nl_canal.slab.wall",
+    "nl_canal.slab.water",
+    "nl_canal.tree.lime",
+    "nl_canal.tree.poplar",
+    "nl_canal.window.flowers",
+    "nl_canal.window.plain",
+    "nl_canal.window.tall"
+  ],
+  "parents": [
+    "67f20b117f88555e8502",
+    "71dab5ac6e269f6a9557",
+    "85d99bbca5c9054ab74a",
+    "2e0a43e7b0495f18ff32",
+    "1a21017c689630d4bc77",
+    "b37a5c42481879d7dad8",
+    "66e1762c9816711a92f8",
+    "6df76a78613e0d0903bb",
+    "3652d6bd9b219df93bb0",
+    "fee0fdeaa7c14b4aeb3e",
+    "7d1b3655648fa47f5927",
+    "664e276e1e2531e7b32e",
+    "0d1d727da0cda52a3e91",
+    "f50a877297c9d74ba885",
+    "dc5fd8008e43e9804d20",
+    "7cae29afd19fc5a8717b",
+    "70d1e5cc4a6b63bc422e",
+    "52ff7f75ba8116f23715",
+    "7b5011aa1901971671d8",
+    "c7f95373ea3da5c52bb4",
+    "b3f525bcc8a4794293fd",
+    "b3c1089be39f797950e7",
+    "bb6e859860d94fcbf3f8",
+    "7261bd38ff7d590f89d6",
+    "1034ea5b48bceae656f9"
+  ],
+  "stats": {
+    "entities": 73,
+    "tris": 19648,
+    "hide_spots": 23,
+    "kinds": {
+      "bike": 3,
+      "boat": 2,
+      "bollard": 2,
+      "chimney": 3,
+      "door": 6,
+      "house": 6,
+      "lamp": 4,
+      "planter": 3,
+      "roof": 6,
+      "tree": 4,
+      "window": 34
+    }
+  }
+}

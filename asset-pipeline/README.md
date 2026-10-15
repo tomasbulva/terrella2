@@ -10,7 +10,7 @@ python -m terrella_assets ledger out --by provider                    # or user 
 python -m terrella_assets preview out      # three.js preview; serves terrella-v2/ so it can read ../puzzles rules
 python -m terrella_assets sync-prices --catalog URL --token ADMIN     # push prices.toml rows the catalog lacks
 python -m terrella_assets worker  --catalog URL --token WORKER        # claim kit.build / diorama.build jobs
-pytest                                                                # 13 tests; integration ones need ../catalog, ../puzzles
+pytest                                                                # 14 tests; integration ones need ../catalog, ../puzzles
 ```
 
 Screenshots: [kit pieces](examples/kit_pieces.png), [diorama by day](examples/diorama_day.png), [at night with context rules](examples/diorama_night.png). Example sidecar: [puzzle_scene.json](examples/puzzle_scene.dio_nl_synthetic_canal.json).
@@ -38,6 +38,7 @@ kit.toml ─► generator ─► cleanup ─► export ────────�
 - Each piece is one mesh with one primitive and one material. Base colour comes from a 4×4 palette atlas, one swatch per role (`spec.ROLES`, append-only). The shader gets the role from the UV cell (`cell = floor(uv*4); role = cell.y*4 + cell.x`). Restyling swaps the PNG; seasons, snow and time of day belong in the shader.
 - Ids: `geometry_hash = H(recipe)` covers generator + version (+ script hash), kind, params, seed, pivot, height, budget and the style inputs that change geometry (wobble; for AI, the prompt). `asset_id = H(geometry, palette)`. Same recipe → cache hit → $0.
 - The catalog slug is `<kit>.<piece name>`, e.g. `nl_canal.window.tall`.
+- **Normal maps:** `TEXCOORD_0` is constant per face, so engines can't derive tangents from it (Godot gets NaN and normal-mapped faces turn white). Every GLB therefore also ships `TEXCOORD_1`, a box projection in metres, plus explicit `TANGENT`s consistent with it. Sample normal and detail maps with `TEXCOORD_1` (Godot: `UV2`). All outputs pass the Khronos glTF validator with 0 errors and 0 warnings.
 
 **Diorama (`diorama.glb`)**
 - Instanced: one mesh per kit piece, with many nodes pointing at it, and one shared material.
@@ -54,7 +55,7 @@ kit.toml ─► generator ─► cleanup ─► export ────────�
 - `kit.build {kit: <kit toml as dict>, only?}` produces a `style_spec` (`spec.roles` = role → hex), an `atlas` (palette PNG), a `seed_image` per AI piece (parent role `concept`) and a `kit_piece` per piece (parents `atlas`, `style`).
 - `diorama.build {recipe_hash, diorama_id}` reads the `RecipeBody`, downloads the kit blobs and uploads a `diorama_build` (parents `kit`, `style`). `puzzle_scene.json` is uploaded as a blob and referenced at `meta.puzzle_scene.sha256`.
 - Usage: each non-local usage row goes to `POST /jobs/{id}/usage`, tagged with the asset it produced, for the user who enqueued the job. Cache hits report nothing.
-- The catalog accepts only a job's own assets as its results. A cache-hit rebuild therefore uploads a new version (same blob, $0) with a `rebuild_of` parent, so lineage cost still reaches the original spend.
+- Rebuilding an unchanged kit is free and mints nothing: the geometry cache means no usage is reported, and the catalog returns the identical latest version (`reused: true`), which the job lists as its result.
 - `prices.toml` uses exact `(provider, model, unit)` keys like the catalog. Real providers have **placeholder** rows, flagged as such in the catalog's price note. Replace them from invoices before the first paid call.
 
 ## Plugging in `dutch_houses.py`

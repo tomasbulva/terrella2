@@ -26,9 +26,43 @@ _NCOMP = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4}
 class PieceMesh:
     positions: np.ndarray
     normals: np.ndarray
-    uvs: np.ndarray
+    uvs: np.ndarray            # TEXCOORD_0: palette swatch, constant per part
     indices: np.ndarray
     image_png: bytes
+    uv2: np.ndarray | None = None        # TEXCOORD_1: box-projected, metres (for tiling detail/normal maps)
+    tangents: np.ndarray | None = None   # TANGENT (xyzw), consistent with uv2
+
+    def __post_init__(self):
+        if self.uv2 is None or self.tangents is None:
+            self.uv2, self.tangents = box_uv_tangents(self.positions, self.normals)
+
+
+def box_uv_tangents(pos: np.ndarray, nrm: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Box projection in metres plus matching tangents.
+
+    The palette UVs (TEXCOORD_0) are constant per face, so engines that derive
+    tangents from UV0 (Godot, MikkTSpace) get NaNs and normal-mapped faces
+    turn white. We therefore ship explicit tangents, built from a second UV
+    set that does vary: project each vertex on the plane of its dominant
+    normal axis. Normal and detail maps must sample TEXCOORD_1 (Godot: UV2).
+    """
+    n = nrm / np.maximum(np.linalg.norm(nrm, axis=1, keepdims=True), 1e-12)
+    ax = np.argmax(np.abs(n), axis=1)
+    sgn = np.where(n[np.arange(len(n)), ax] >= 0, 1.0, -1.0)
+    U = np.zeros_like(n)
+    V = np.zeros_like(n)
+    # x-dominant: U along -z*sign, V up; y-dominant: U along x, V along -z*sign; z-dominant: U along x*sign, V up
+    U[ax == 0] = np.c_[np.zeros((ax == 0).sum()), np.zeros((ax == 0).sum()), -sgn[ax == 0]]
+    V[ax == 0] = (0, 1, 0)
+    U[ax == 1] = (1, 0, 0)
+    V[ax == 1] = np.c_[np.zeros((ax == 1).sum()), np.zeros((ax == 1).sum()), -sgn[ax == 1]]
+    U[ax == 2] = np.c_[sgn[ax == 2], np.zeros((ax == 2).sum()), np.zeros((ax == 2).sum())]
+    V[ax == 2] = (0, 1, 0)
+    uv2 = np.c_[np.einsum("ij,ij->i", pos, U), -np.einsum("ij,ij->i", pos, V)]   # glTF v points down
+    t = U - n * np.einsum("ij,ij->i", n, U)[:, None]
+    t /= np.maximum(np.linalg.norm(t, axis=1, keepdims=True), 1e-12)
+    w = np.where(np.einsum("ij,ij->i", np.cross(n, t), V) >= 0, 1.0, -1.0)
+    return uv2.astype(np.float32), np.c_[t, w].astype(np.float32)
 
 
 def _chunks(glb: bytes) -> tuple[dict, bytes]:
@@ -66,12 +100,9 @@ def read_piece(glb: bytes) -> PieceMesh:
     prim = js["meshes"][0]["primitives"][0]
     attr = prim["attributes"]
     pos = _accessor(js, binary, attr["POSITION"]).astype(np.float32)
-    # Bake the piece's own node transform (if any) so pieces are always in their own frame.
     node = next(n for n in js["nodes"] if "mesh" in n)
-    if "matrix" in node:
-        m = np.array(node["matrix"], dtype=np.float64).reshape(4, 4).T
-        if not np.allclose(m, np.eye(4)):
-            pos = (np.c_[pos, np.ones(len(pos))] @ m.T)[:, :3].astype(np.float32)
+    if any(k in node for k in ("matrix", "translation", "rotation", "scale")):
+        raise ValueError("kit piece mesh node must have an identity transform")
     img = js["images"][0]
     bv = js["bufferViews"][img["bufferView"]]
     png = binary[bv.get("byteOffset", 0):bv.get("byteOffset", 0) + bv["byteLength"]]
@@ -81,6 +112,8 @@ def read_piece(glb: bytes) -> PieceMesh:
         uvs=_accessor(js, binary, attr["TEXCOORD_0"]).astype(np.float32),
         indices=_accessor(js, binary, prim["indices"]).astype(np.uint32).reshape(-1),
         image_png=bytes(png),
+        uv2=_accessor(js, binary, attr["TEXCOORD_1"]).astype(np.float32) if "TEXCOORD_1" in attr else None,
+        tangents=_accessor(js, binary, attr["TANGENT"]).astype(np.float32) if "TANGENT" in attr else None,
     )
 
 
@@ -140,7 +173,9 @@ def write_scene(root: Node, meshes: dict[str, PieceMesh], palette_png: bytes, ex
             "attributes": {
                 "POSITION": add_acc(pm.positions.astype("<f4"), 5126, "VEC3", 34962, minmax=True),
                 "NORMAL": add_acc(pm.normals.astype("<f4"), 5126, "VEC3", 34962),
+                "TANGENT": add_acc(pm.tangents.astype("<f4"), 5126, "VEC4", 34962),
                 "TEXCOORD_0": add_acc(pm.uvs.astype("<f4"), 5126, "VEC2", 34962),
+                "TEXCOORD_1": add_acc(pm.uv2.astype("<f4"), 5126, "VEC2", 34962),
             },
             "indices": add_acc(pm.indices.astype("<u4"), 5125, "SCALAR", 34963),
             "material": 0,

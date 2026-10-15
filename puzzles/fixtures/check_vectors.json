@@ -1,0 +1,970 @@
+{
+ "cases": [
+  {
+   "attempt": {
+    "select": "house_05_w20"
+   },
+   "expected": {
+    "feedback": "solved",
+    "progress": 1.0,
+    "solved": true
+   },
+   "instance_id": "pz_1e07a050",
+   "name": "riddle2: correct"
+  },
+  {
+   "attempt": {
+    "select": "lamp_0"
+   },
+   "expected": {
+    "feedback": "wrong",
+    "progress": 0.0,
+    "solved": false
+   },
+   "instance_id": "pz_1e07a050",
+   "name": "riddle2: wrong"
+  },
+  {
+   "attempt": {},
+   "expected": {
+    "feedback": "invalid",
+    "progress": 0.0,
+    "solved": false
+   },
+   "instance_id": "pz_1e07a050",
+   "name": "riddle2: missing"
+  },
+  {
+   "attempt": {
+    "selects": [
+     "house_05_w12",
+     "tree_3",
+     "house_04_w00",
+     "planter_1"
+    ]
+   },
+   "expected": {
+    "feedback": "solved",
+    "progress": 1.0,
+    "solved": true
+   },
+   "instance_id": "pz_c9b85288",
+   "name": "trail3: correct"
+  },
+  {
+   "attempt": {
+    "selects": [
+     "house_05_w12",
+     "tree_3"
+    ]
+   },
+   "expected": {
+    "feedback": "keep_going",
+    "progress": 0.5,
+    "solved": false
+   },
+   "instance_id": "pz_c9b85288",
+   "name": "trail3: prefix"
+  },
+  {
+   "attempt": {
+    "selects": [
+     "house_05_w12",
+     "bollard_0"
+    ]
+   },
+   "expected": {
+    "feedback": "wrong",
+    "progress": 0.25,
+    "solved": false
+   },
+   "instance_id": "pz_c9b85288",
+   "name": "trail3: wrong second"
+  },
+  {
+   "attempt": {
+    "selects": []
+   },
+   "expected": {
+    "feedback": "keep_going",
+    "progress": 0.0,
+    "solved": false
+   },
+   "instance_id": "pz_c9b85288",
+   "name": "trail3: empty"
+  },
+  {
+   "attempt": {
+    "selects": "house_05_w12"
+   },
+   "expected": {
+    "feedback": "invalid",
+    "progress": 0.0,
+    "solved": false
+   },
+   "instance_id": "pz_c9b85288",
+   "name": "trail3: not a list"
+  },
+  {
+   "attempt": {
+    "found": [
+     "bench_1",
+     "house_00_chimney",
+     "house_00_door",
+     "planter_1",
+     "tree_3"
+    ]
+   },
+   "expected": {
+    "feedback": "solved",
+    "progress": 1.0,
+    "solved": true
+   },
+   "instance_id": "pz_1699f7a1",
+   "name": "seek2: correct"
+  },
+  {
+   "attempt": {
+    "found": [
+     "bench_1",
+     "house_00_chimney",
+     "tree_1x"
+    ]
+   },
+   "expected": {
+    "feedback": "keep_going",
+    "progress": 0.4,
+    "solved": false
+   },
+   "instance_id": "pz_1699f7a1",
+   "name": "seek2: partial with junk"
+  },
+  {
+   "attempt": {
+    "found": [
+     "tree_3",
+     "planter_1",
+     "house_00_door",
+     "house_00_chimney",
+     "bench_1"
+    ]
+   },
+   "expected": {
+    "feedback": "solved",
+    "progress": 1.0,
+    "solved": true
+   },
+   "instance_id": "pz_1699f7a1",
+   "name": "seek2: unordered"
+  },
+  {
+   "attempt": {
+    "presses": [
+     "house_04_w00",
+     "house_04_w11",
+     "house_04_w21"
+    ]
+   },
+   "expected": {
+    "feedback": "solved",
+    "progress": 1.0,
+    "solved": true
+   },
+   "instance_id": "pz_2377df91",
+   "name": "pattern1: correct"
+  },
+  {
+   "attempt": {
+    "presses": [
+     "house_04_w00",
+     "house_04_w11",
+     "house_04_w21",
+     "house_04_w00",
+     "house_04_w00"
+    ]
+   },
+   "expected": {
+    "feedback": "solved",
+    "progress": 1.0,
+    "solved": true
+   },
+   "instance_id": "pz_2377df91",
+   "name": "pattern1: doubled press cancels"
+  },
+  {
+   "attempt": {
+    "presses": []
+   },
+   "expected": {
+    "feedback": "keep_going",
+    "progress": 0.4,
+    "solved": false
+   },
+   "instance_id": "pz_2377df91",
+   "name": "pattern1: no presses"
+  },
+  {
+   "attempt": {
+    "presses": [
+     "lamp_0"
+    ]
+   },
+   "expected": {
+    "feedback": "invalid",
+    "progress": 0.0,
+    "solved": false
+   },
+   "instance_id": "pz_2377df91",
+   "name": "pattern1: unknown cell"
+  },
+  {
+   "attempt": {
+    "presses": [
+     "house_05_w02",
+     "house_05_w21",
+     "house_05_w22",
+     "house_05_w30"
+    ]
+   },
+   "expected": {
+    "feedback": "solved",
+    "progress": 1.0,
+    "solved": true
+   },
+   "instance_id": "pz_5f2176db",
+   "name": "pattern3: correct"
+  },
+  {
+   "attempt": {
+    "presses": [
+     "house_05_w02",
+     "house_05_w21",
+     "house_05_w22",
+     "house_05_w30",
+     "house_05_w02",
+     "house_05_w02"
+    ]
+   },
+   "expected": {
+    "feedback": "solved",
+    "progress": 1.0,
+    "solved": true
+   },
+   "instance_id": "pz_5f2176db",
+   "name": "pattern3: doubled press cancels"
+  },
+  {
+   "attempt": {
+    "presses": []
+   },
+   "expected": {
+    "feedback": "keep_going",
+    "progress": 0.6364,
+    "solved": false
+   },
+   "instance_id": "pz_5f2176db",
+   "name": "pattern3: no presses"
+  },
+  {
+   "attempt": {
+    "presses": [
+     "lamp_0"
+    ]
+   },
+   "expected": {
+    "feedback": "invalid",
+    "progress": 0.0,
+    "solved": false
+   },
+   "instance_id": "pz_5f2176db",
+   "name": "pattern3: unknown cell"
+  },
+  {
+   "attempt": {
+    "eye": [
+     3.229,
+     6.293,
+     9.0
+    ],
+    "look_at": [
+     11.0,
+     0.0,
+     9.0
+    ]
+   },
+   "expected": {
+    "feedback": "solved",
+    "progress": 1.0,
+    "solved": true
+   },
+   "instance_id": "pz_31e8a448",
+   "name": "viewpoint2: correct"
+  },
+  {
+   "attempt": {
+    "eye": [
+     3.729,
+     6.293,
+     9.0
+    ],
+    "look_at": [
+     11.0,
+     0.0,
+     9.0
+    ]
+   },
+   "expected": {
+    "feedback": "solved",
+    "progress": 1.0,
+    "solved": true
+   },
+   "instance_id": "pz_31e8a448",
+   "name": "viewpoint2: within tolerance"
+  },
+  {
+   "attempt": {
+    "eye": [
+     9.229,
+     6.293,
+     9.0
+    ],
+    "look_at": [
+     11.0,
+     0.0,
+     9.0
+    ]
+   },
+   "expected": {
+    "feedback": "warmer",
+    "progress": 0.3333,
+    "solved": false
+   },
+   "instance_id": "pz_31e8a448",
+   "name": "viewpoint2: far"
+  },
+  {
+   "attempt": {
+    "eye": [
+     15.229,
+     6.293,
+     9.0
+    ],
+    "look_at": [
+     11.0,
+     0.0,
+     9.0
+    ],
+    "previous_progress": 0.3333
+   },
+   "expected": {
+    "feedback": "colder",
+    "progress": 0.0,
+    "solved": false
+   },
+   "instance_id": "pz_31e8a448",
+   "name": "viewpoint2: farther, previously closer"
+  },
+  {
+   "attempt": {
+    "eye": [
+     3.229,
+     6.293,
+     9.0
+    ],
+    "look_at": [
+     -4.542,
+     12.586,
+     9.0
+    ]
+   },
+   "expected": {
+    "feedback": "warmer",
+    "progress": 0.0,
+    "solved": false
+   },
+   "instance_id": "pz_31e8a448",
+   "name": "viewpoint2: looking away"
+  },
+  {
+   "attempt": {
+    "eye": [
+     3.229,
+     6.293
+    ],
+    "look_at": [
+     11.0,
+     0.0,
+     9.0
+    ]
+   },
+   "expected": {
+    "feedback": "invalid",
+    "progress": 0.0,
+    "solved": false
+   },
+   "instance_id": "pz_31e8a448",
+   "name": "viewpoint2: malformed"
+  }
+ ],
+ "instances": {
+  "pz_1699f7a1": {
+   "context": {
+    "geocell": "u173z",
+    "local_date": "2026-07-04",
+    "local_time": "2026-07-04T14:10:00+02:00",
+    "phase": "day",
+    "phase_ends_at": "2026-07-04T21:05:00+02:00",
+    "season": "summer",
+    "snow_cover": false,
+    "weather": "clear",
+    "weather_stable_until": "2026-07-04T18:00:00+02:00"
+   },
+   "context_bound": false,
+   "difficulty": 3.7,
+   "diorama": {
+    "id": "dio_nl_amsterdam_prinsengracht",
+    "recipe_hash": "sha256:7f1c0e2a9b"
+   },
+   "generator": "0.1.0",
+   "id": "pz_1699f7a1",
+   "prompt": {
+    "token": "token.paper_boat"
+   },
+   "reward_tags": [
+    "phase:day",
+    "season:summer",
+    "style:nl_canal",
+    "tier:2",
+    "type:seek",
+    "weather:clear"
+   ],
+   "schema": "terrella.puzzle/1",
+   "seed": 429734803,
+   "slot": "2026-07-04/vectors",
+   "solution": {
+    "targets": [
+     "bench_1",
+     "house_00_chimney",
+     "house_00_door",
+     "planter_1",
+     "tree_3"
+    ]
+   },
+   "spawns": [
+    {
+     "anchor": "bench_1",
+     "prop": "token.paper_boat"
+    },
+    {
+     "anchor": "house_00_chimney",
+     "prop": "token.paper_boat"
+    },
+    {
+     "anchor": "house_00_door",
+     "prop": "token.paper_boat"
+    },
+    {
+     "anchor": "planter_1",
+     "prop": "token.paper_boat"
+    },
+    {
+     "anchor": "tree_3",
+     "prop": "token.paper_boat"
+    }
+   ],
+   "tier": 2,
+   "type": "seek",
+   "valid_from": "2026-07-04T14:10:00+02:00",
+   "valid_until": "2026-07-04T23:59:59+02:00"
+  },
+  "pz_1e07a050": {
+   "context": {
+    "geocell": "u173z",
+    "local_date": "2026-12-21",
+    "local_time": "2026-12-21T22:15:00+01:00",
+    "phase": "night",
+    "phase_ends_at": "2026-12-22T07:40:00+01:00",
+    "season": "winter",
+    "snow_cover": true,
+    "weather": "snow",
+    "weather_stable_until": "2026-12-21T23:30:00+01:00"
+   },
+   "context_bound": true,
+   "difficulty": 4.4,
+   "diorama": {
+    "id": "dio_nl_amsterdam_prinsengracht",
+    "recipe_hash": "sha256:7f1c0e2a9b"
+   },
+   "generator": "0.1.0",
+   "id": "pz_1e07a050",
+   "prompt": {
+    "clue": {
+     "predicates": [
+      {
+       "key": "curtains",
+       "op": "attr",
+       "value": "blue"
+      },
+      {
+       "key": "lit",
+       "op": "attr",
+       "value": true
+      },
+      {
+       "key": "shutters",
+       "op": "attr",
+       "value": "none"
+      }
+     ],
+     "subject": "window"
+    }
+   },
+   "reward_tags": [
+    "context_clue",
+    "phase:night",
+    "season:winter",
+    "snow_cover",
+    "style:nl_canal",
+    "tier:2",
+    "type:riddle",
+    "weather:snow"
+   ],
+   "schema": "terrella.puzzle/1",
+   "seed": 459836356,
+   "slot": "2026-12-21/vectors",
+   "solution": {
+    "answer": "house_05_w20"
+   },
+   "spawns": [],
+   "tier": 2,
+   "type": "riddle",
+   "valid_from": "2026-12-21T22:15:00+01:00",
+   "valid_until": "2026-12-21T23:30:00+01:00"
+  },
+  "pz_2377df91": {
+   "context": {
+    "geocell": "u173z",
+    "local_date": "2027-04-12",
+    "local_time": "2027-04-12T06:20:00+02:00",
+    "phase": "dawn",
+    "phase_ends_at": "2027-04-12T07:05:00+02:00",
+    "season": "spring",
+    "snow_cover": false,
+    "weather": "fog",
+    "weather_stable_until": "2027-04-12T09:00:00+02:00"
+   },
+   "context_bound": false,
+   "difficulty": 2.6,
+   "diorama": {
+    "id": "dio_nl_amsterdam_prinsengracht",
+    "recipe_hash": "sha256:7f1c0e2a9b"
+   },
+   "generator": "0.1.0",
+   "id": "pz_2377df91",
+   "prompt": {
+    "kind": "window",
+    "owner": "house_04",
+    "owner_phrase": "the house painted brown",
+    "toggle_attr": "lit"
+   },
+   "reward_tags": [
+    "phase:dawn",
+    "season:spring",
+    "style:nl_canal",
+    "tier:1",
+    "type:pattern",
+    "weather:fog"
+   ],
+   "schema": "terrella.puzzle/1",
+   "seed": 1332335940,
+   "slot": "2027-04-12/vectors",
+   "solution": {
+    "cells": [
+     "house_04_w00",
+     "house_04_w10",
+     "house_04_w11",
+     "house_04_w20",
+     "house_04_w21"
+    ],
+    "mode": "single",
+    "neighbors": {},
+    "start": [
+     true,
+     true,
+     true,
+     false,
+     true
+    ],
+    "target": [
+     false,
+     true,
+     false,
+     false,
+     false
+    ]
+   },
+   "spawns": [],
+   "tier": 1,
+   "type": "pattern",
+   "valid_from": "2027-04-12T06:20:00+02:00",
+   "valid_until": "2027-04-12T23:59:59+02:00"
+  },
+  "pz_31e8a448": {
+   "context": {
+    "geocell": "u173z",
+    "local_date": "2026-11-02",
+    "local_time": "2026-11-02T23:05:00+01:00",
+    "phase": "night",
+    "phase_ends_at": "2026-11-03T07:20:00+01:00",
+    "season": "autumn",
+    "snow_cover": false,
+    "weather": "storm",
+    "weather_stable_until": "2026-11-02T23:45:00+01:00"
+   },
+   "context_bound": false,
+   "difficulty": 3.5,
+   "diorama": {
+    "id": "dio_nl_amsterdam_prinsengracht",
+    "recipe_hash": "sha256:7f1c0e2a9b"
+   },
+   "generator": "0.1.0",
+   "id": "pz_31e8a448",
+   "prompt": {
+    "target_hint": "church"
+   },
+   "reward_tags": [
+    "phase:night",
+    "season:autumn",
+    "style:nl_canal",
+    "tier:2",
+    "type:viewpoint",
+    "weather:storm"
+   ],
+   "schema": "terrella.puzzle/1",
+   "seed": 1068268696,
+   "slot": "2026-11-02/vectors",
+   "solution": {
+    "pose": {
+     "eye": [
+      3.229,
+      6.293,
+      9.0
+     ],
+     "look_at": [
+      11.0,
+      0.0,
+      9.0
+     ],
+     "target": "westerkerk"
+    },
+    "tolerance": {
+     "angle_deg": 12.0,
+     "eye_m": 2.0
+    }
+   },
+   "spawns": [],
+   "tier": 2,
+   "type": "viewpoint",
+   "valid_from": "2026-11-02T23:05:00+01:00",
+   "valid_until": "2026-11-02T23:59:59+01:00"
+  },
+  "pz_5f2176db": {
+   "context": {
+    "geocell": "u173z",
+    "local_date": "2026-12-21",
+    "local_time": "2026-12-21T22:15:00+01:00",
+    "phase": "night",
+    "phase_ends_at": "2026-12-22T07:40:00+01:00",
+    "season": "winter",
+    "snow_cover": true,
+    "weather": "snow",
+    "weather_stable_until": "2026-12-21T23:30:00+01:00"
+   },
+   "context_bound": false,
+   "difficulty": 5.4,
+   "diorama": {
+    "id": "dio_nl_amsterdam_prinsengracht",
+    "recipe_hash": "sha256:7f1c0e2a9b"
+   },
+   "generator": "0.1.0",
+   "id": "pz_5f2176db",
+   "prompt": {
+    "kind": "window",
+    "owner": "house_05",
+    "owner_phrase": "the house painted black",
+    "toggle_attr": "lit"
+   },
+   "reward_tags": [
+    "phase:night",
+    "season:winter",
+    "snow_cover",
+    "style:nl_canal",
+    "tier:3",
+    "type:pattern",
+    "weather:snow"
+   ],
+   "schema": "terrella.puzzle/1",
+   "seed": 459836356,
+   "slot": "2026-12-21/vectors",
+   "solution": {
+    "cells": [
+     "house_05_w00",
+     "house_05_w02",
+     "house_05_w10",
+     "house_05_w11",
+     "house_05_w12",
+     "house_05_w20",
+     "house_05_w21",
+     "house_05_w22",
+     "house_05_w30",
+     "house_05_w31",
+     "house_05_w32"
+    ],
+    "mode": "cross",
+    "neighbors": {
+     "house_05_w00": [
+      "house_05_w10"
+     ],
+     "house_05_w02": [
+      "house_05_w12"
+     ],
+     "house_05_w10": [
+      "house_05_w00",
+      "house_05_w20",
+      "house_05_w11"
+     ],
+     "house_05_w11": [
+      "house_05_w21",
+      "house_05_w10",
+      "house_05_w12"
+     ],
+     "house_05_w12": [
+      "house_05_w02",
+      "house_05_w22",
+      "house_05_w11"
+     ],
+     "house_05_w20": [
+      "house_05_w10",
+      "house_05_w30",
+      "house_05_w21"
+     ],
+     "house_05_w21": [
+      "house_05_w11",
+      "house_05_w31",
+      "house_05_w20",
+      "house_05_w22"
+     ],
+     "house_05_w22": [
+      "house_05_w12",
+      "house_05_w32",
+      "house_05_w21"
+     ],
+     "house_05_w30": [
+      "house_05_w20",
+      "house_05_w31"
+     ],
+     "house_05_w31": [
+      "house_05_w21",
+      "house_05_w30",
+      "house_05_w32"
+     ],
+     "house_05_w32": [
+      "house_05_w22",
+      "house_05_w31"
+     ]
+    },
+    "start": [
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    "target": [
+     false,
+     true,
+     false,
+     true,
+     true,
+     true,
+     false,
+     false,
+     true,
+     false,
+     true
+    ]
+   },
+   "spawns": [],
+   "tier": 3,
+   "type": "pattern",
+   "valid_from": "2026-12-21T22:15:00+01:00",
+   "valid_until": "2026-12-21T23:59:59+01:00"
+  },
+  "pz_c9b85288": {
+   "context": {
+    "geocell": "u173z",
+    "local_date": "2026-10-15",
+    "local_time": "2026-10-15T18:40:00+02:00",
+    "phase": "dusk",
+    "phase_ends_at": "2026-10-15T19:25:00+02:00",
+    "season": "autumn",
+    "snow_cover": false,
+    "weather": "rain",
+    "weather_stable_until": "2026-10-15T20:00:00+02:00"
+   },
+   "context_bound": true,
+   "difficulty": 5.3,
+   "diorama": {
+    "id": "dio_nl_amsterdam_prinsengracht",
+    "recipe_hash": "sha256:7f1c0e2a9b"
+   },
+   "generator": "0.1.0",
+   "id": "pz_c9b85288",
+   "prompt": {
+    "clues": [
+     {
+      "predicates": [
+       {
+        "key": "lit",
+        "op": "attr",
+        "value": true
+       },
+       {
+        "key": "shutters",
+        "op": "attr",
+        "value": "green"
+       },
+       {
+        "key": "gable",
+        "op": "parent_attr",
+        "value": "bell"
+       }
+      ],
+      "subject": "window"
+     },
+     {
+      "predicates": [
+       {
+        "key": "foliage",
+        "op": "attr",
+        "value": "orange"
+       },
+       {
+        "id": "house_05_w12",
+        "op": "near_id",
+        "within": 6.6
+       }
+      ],
+      "subject": "tree"
+     },
+     {
+      "predicates": [
+       {
+        "key": "shutters",
+        "op": "attr",
+        "value": "red"
+       },
+       {
+        "key": "color",
+        "op": "parent_attr",
+        "value": "brown"
+       },
+       {
+        "id": "tree_3",
+        "op": "near_id",
+        "within": 7.2
+       }
+      ],
+      "subject": "window"
+     },
+     {
+      "predicates": [
+       {
+        "key": "color",
+        "op": "attr",
+        "value": "terracotta"
+       },
+       {
+        "id": "house_04_w00",
+        "op": "near_id",
+        "within": 6.2
+       }
+      ],
+      "subject": "planter"
+     }
+    ]
+   },
+   "reward_tags": [
+    "context_clue",
+    "phase:dusk",
+    "season:autumn",
+    "style:nl_canal",
+    "tier:3",
+    "type:trail",
+    "weather:rain"
+   ],
+   "schema": "terrella.puzzle/1",
+   "seed": 1126627429,
+   "slot": "2026-10-15/vectors",
+   "solution": {
+    "answers": [
+     "house_05_w12",
+     "tree_3",
+     "house_04_w00",
+     "planter_1"
+    ]
+   },
+   "spawns": [],
+   "tier": 3,
+   "type": "trail",
+   "valid_from": "2026-10-15T18:40:00+02:00",
+   "valid_until": "2026-10-15T19:25:00+02:00"
+  }
+ },
+ "rng": {
+  "fnv1a32": {
+   "": 2166136261,
+   "a": 3826002220,
+   "sha256:7f1c0e2a9b|2026-10-15|daily": 1249231324,
+   "terrella": 898555192,
+   "\u017e": 2408550426
+  },
+  "mulberry32": {
+   "0": [
+    1144304738,
+    1416247,
+    958946056,
+    627933444,
+    2007157716
+   ],
+   "1": [
+    2693262067,
+    11749833,
+    2265367787,
+    4213581821,
+    4159151403
+   ],
+   "4294967295": [
+    3850105811,
+    813802916,
+    3073704848,
+    4054706436,
+    3630262831
+   ],
+   "7": [
+    50271532,
+    266108690,
+    4195786334,
+    3002305430,
+    2239590375
+   ]
+  }
+ },
+ "schema": "terrella.check_vectors/1"
+}

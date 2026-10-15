@@ -1,0 +1,12 @@
+; Minimal project so the addon and its tests run headless:
+;   godot --headless --path godot --script res://tests/run_tests.gd
+config_version=5
+
+[application]
+
+config/name="Terrella World Context"
+config/features=PackedStringArray("4.5")
+
+[autoload]
+
+WorldContext="*res://addons/terrella_world/world_context.gd"

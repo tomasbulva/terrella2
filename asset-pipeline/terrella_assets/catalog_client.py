@@ -64,20 +64,6 @@ class CatalogClient:
     def get_blob(self, sha: str) -> bytes:
         return self._req("GET", f"/blobs/{sha}", "get_blob").content
 
-    def find_asset(self, kind: str, slug: str, blob_sha256: str | None = None, spec: dict | None = None,
-                   job_id: str | None = None) -> dict | None:
-        """An existing version with identical content (from `job_id` if given).
-        The catalog only accepts a job's own assets as its results, so reuse
-        across jobs is limited to inputs (style spec, atlas)."""
-        for a in self._req("GET", "/assets", "list_assets", params={"kind": kind, "slug": slug}).json():
-            if job_id is not None and a.get("job_id") != job_id:
-                continue
-            if blob_sha256 and (a.get("blob") or {}).get("sha256") == blob_sha256:
-                return a
-            if spec is not None and a.get("spec") == spec:
-                return a
-        return None
-
     def create_asset(self, body: dict) -> dict:
         return self._req("POST", "/assets", "create_asset", json=body).json()
 
