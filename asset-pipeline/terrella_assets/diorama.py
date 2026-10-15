@@ -4,13 +4,22 @@ The first layout generator is `canal_street`: a synthetic row of canal houses
 on a quay with props and a canal, seeded. OSM-driven layouts plug in later
 behind the same output contract:
 
-  * diorama.glb: instanced kit meshes (one mesh per kit piece, many nodes),
-    one shared palette material. Every node a player can tap is named with
-    its puzzle entity id; helper geometry is "<entity>~<part>" or
-    "env~<part>". Engines map a tap to the nearest ancestor whose name has
-    no "~". Node extras = {kind, attrs, tags, kit_piece}, so the renderer
-    can apply puzzles/data/context_rules.json per node (lit windows/lamps,
-    snowy roofs, foliage, boats present).
+  * diorama.glb, batch="merged" (default): all static kit geometry baked
+    into one mesh ("env~static", one palette material, one draw call).
+    Each vertex carries TEXCOORD_2 = (entity_index, height above its piece
+    pivot). Entity nodes survive as empty nodes named with their puzzle
+    entity id, extras = {kind, attrs, tags, kit_piece, entity_index, aabb}.
+    Things that move or toggle (boats) stay instanced kit nodes.
+    batch="instanced": one mesh per kit piece, many nodes; helper geometry
+    is "<entity>~<part>" or "env~<part>"; tap = nearest ancestor whose name
+    has no "~". Can't express house lean (glTF TRS has no shear).
+    Either way the renderer applies puzzles/data/context_rules.json per
+    entity (lit windows/lamps, boats present).
+  * Water is a scene element, not a kit piece: "env~water" is a gridded
+    surface with its own material ("terrella.water", alpha-blended) and
+    extras.water = {level, bed, bounds, shallow, deep, flow}; the engine
+    replaces the material with its water shader. "env~resin" closes the
+    canal where it leaves the plinth (diorama cut-away).
   * puzzle_scene.json (terrella.puzzle_scene/1): the puzzle library's view of
     the same build. Ids are stable for a given recipe hash (seeded layout, no
     wall clock, no dict-order dependence).
@@ -32,15 +41,17 @@ from pathlib import Path
 import numpy as np
 import trimesh
 
-from .gltf import Node, PieceMesh, read_piece, world_transforms, write_scene
+from .gltf import Node, PieceMesh, merge, read_piece, world_transforms, write_scene
 
-LAYOUT_VERSION = "0.1.0"
+LAYOUT_VERSION = "0.2.0"     # 0.2: water surface + resin, house lean (recipe generator version >= 0.2.0)
 FLOOR_H = 3.0
 HOUSE_DEPTH = 8.0
 QUAY_Z = (0.3, 4.0)          # sidewalk/quay in front of the facades
 CANAL_Z = (4.0, 10.5)
 FAR_QUAY_Z = (10.5, 12.5)
 WATER_Y = -0.8
+BED_Y = -1.4
+DYNAMIC_KINDS = {"boat"}     # stay instanced nodes in merged output: they move and toggle
 
 # Named colours for visible attrs. Clues say "the house painted <name>", so
 # names are coarse and distinct.
@@ -116,7 +127,9 @@ class _Rng:
 def canal_street(kit: KitView, seed: int, params: dict) -> tuple[Node, list[dict]]:
     """Returns the node tree and the entity list (positions filled in later)."""
     rng = _Rng(seed)
+    lean_rng = _Rng(seed ^ 0x1EA7)       # separate stream: lean on/off must not reshuffle the layout
     n_houses = int(params.get("houses", 6))
+    lean = bool(params.get("lean", True))
     root = Node("diorama")
     ents: list[dict] = []
 
@@ -155,6 +168,8 @@ def canal_street(kit: KitView, seed: int, params: dict) -> tuple[Node, list[dict
         house = ent(Node(hid, translation=(hx, 0.0, 0.0)), "house", fac, tags=["building"],
                     attrs={"color": colour_name(kit.palette[kit.role_of(fac) or "wall"]), "gable": gname,
                            "floors": floors})
+        if lean:      # Amsterdam: lean toward the canal, slight list sideways
+            house.shear = (lean_rng.uniform(-0.012, 0.012), lean_rng.uniform(0.01, 0.035))
         root.children.append(house)
         house.children.append(Node(f"{hid}~facade", mesh=fac, scale=(w, H, 1.0)))
         house.children.append(Node(f"{hid}~body", mesh=kit.s("slab.wall"), translation=(0, 0, -HOUSE_DEPTH / 2),
@@ -207,8 +222,9 @@ def canal_street(kit: KitView, seed: int, params: dict) -> tuple[Node, list[dict
     env("plinth", "slab.ground", -HOUSE_DEPTH - 1.5, FAR_QUAY_Z[1] + 0.5, -2.6, -1.6, x0=-2.0, x1=L + 2.0)
     env("backyard", "slab.ground", -HOUSE_DEPTH - 1.5, 0.0, -1.6, -0.02)
     env("quay", "slab.stone", QUAY_Z[0] - 0.3, QUAY_Z[1], -1.6, 0.0)
-    env("canal_bed", "slab.stone", CANAL_Z[0], CANAL_Z[1], -1.6, -1.4)
-    env("water", "slab.water", CANAL_Z[0], CANAL_Z[1], -1.4, WATER_Y)
+    env("canal_bed", "slab.stone", CANAL_Z[0], CANAL_Z[1], -1.6, BED_Y)
+    root.children.append(Node("env~water", mesh="water", extras={"kind": "water", "water": _water_info(kit, L)}))
+    root.children.append(Node("env~resin", mesh="resin"))
     env("far_quay", "slab.stone", FAR_QUAY_Z[0], FAR_QUAY_Z[1], -1.6, 0.0)
 
     # --- props: lanes along the quay, kept off doors and each other
@@ -289,13 +305,78 @@ def canal_street(kit: KitView, seed: int, params: dict) -> tuple[Node, list[dict
     return root, ents
 
 
+# ---------------------------------------------------------------- water
+
+def _hex(h: str) -> np.ndarray:
+    h = h.lstrip("#")
+    return np.array([int(h[i:i + 2], 16) for i in (0, 2, 4)], dtype=float) / 255.0
+
+
+def _to_hex(c: np.ndarray) -> str:
+    return "#" + "".join(f"{int(round(float(v) * 255)):02x}" for v in np.clip(c, 0, 1))
+
+
+def _water_info(kit: KitView, L: float) -> dict:
+    w = _hex(kit.palette.get("water", "#3d5f6b"))
+    return {
+        "style": "canal", "level": WATER_Y, "bed": BED_Y,
+        "bounds": [-1.0, CANAL_Z[0], L + 1.0, CANAL_Z[1]],     # x0, z0, x1, z1 in the node's frame
+        "shallow": _to_hex(w * 1.25 + 0.03), "deep": _to_hex(w * 0.35),
+        "flow": [1.0, 0.0],
+        "uv": "TEXCOORD_0 = (along, across) in 0..1; TEXCOORD_1 = metres",
+    }
+
+
+def _water_meshes(info: dict, cell: float = 1.0) -> dict[str, PieceMesh]:
+    """Gridded water surface (so engines can displace vertices) and the resin
+    end caps where the canal leaves the plinth."""
+    x0, z0, x1, z1 = info["bounds"]
+    nx, nz = max(1, int(np.ceil((x1 - x0) / cell))), max(1, int(np.ceil((z1 - z0) / cell)))
+    u, v = np.meshgrid(np.linspace(0, 1, nx + 1), np.linspace(0, 1, nz + 1), indexing="ij")
+    pos = np.c_[x0 + u.ravel() * (x1 - x0), np.full(u.size, info["level"]), z0 + v.ravel() * (z1 - z0)]
+    idx = []
+    for i in range(nx):
+        for j in range(nz):
+            a, b, c, d = i * (nz + 1) + j, (i + 1) * (nz + 1) + j, (i + 1) * (nz + 1) + j + 1, i * (nz + 1) + j + 1
+            idx += [a, d, c, a, c, b]            # counter-clockwise seen from +Y
+    up = np.tile([0.0, 1.0, 0.0], (len(pos), 1))
+    water = PieceMesh(pos.astype(np.float32), up.astype(np.float32), np.c_[u.ravel(), v.ravel()].astype(np.float32),
+                      np.array(idx, np.uint32), b"", material="terrella.water")
+    caps_p, caps_n, caps_i = [], [], []
+    for x, sx in ((x0, -1.0), (x1, 1.0)):
+        q = np.array([[x, info["bed"], z0], [x, info["bed"], z1], [x, info["level"], z1], [x, info["level"], z0]])
+        o = len(caps_p) * 4
+        caps_p.append(q)
+        caps_n.append(np.tile([sx, 0.0, 0.0], (4, 1)))
+        tri = [0, 1, 2, 0, 2, 3] if sx > 0 else [0, 2, 1, 0, 3, 2]
+        caps_i += [o + t for t in tri]
+    resin = PieceMesh(np.vstack(caps_p).astype(np.float32), np.vstack(caps_n).astype(np.float32),
+                      np.zeros((8, 2), np.float32), np.array(caps_i, np.uint32), b"", material="terrella.resin")
+    return {"water": water, "resin": resin}
+
+
+def _materials(info: dict) -> dict[str, dict]:
+    s, d = _hex(info["shallow"]), _hex(info["deep"])
+    lin = lambda c: (c ** 2.2).round(4).tolist()          # glTF factors are linear
+    return {
+        "terrella.water": {"name": "terrella.water", "alphaMode": "BLEND", "doubleSided": False,
+                           "pbrMetallicRoughness": {"baseColorFactor": lin((s + d) / 2) + [0.85],
+                                                    "metallicFactor": 0.0, "roughnessFactor": 0.05},
+                           "extras": {"engine_shader": "water", "replace": True}},
+        "terrella.resin": {"name": "terrella.resin", "alphaMode": "BLEND",
+                           "pbrMetallicRoughness": {"baseColorFactor": lin(d) + [0.6],
+                                                    "metallicFactor": 0.0, "roughnessFactor": 0.1}},
+    }
+
+
 # ---------------------------------------------------------------- visibility
 
 HIDE_KINDS = {"chimney", "door", "planter", "bollard", "bike", "tree", "boat", "lamp"}
 
 
-def _world_meshes(root: Node, kit: KitView) -> tuple[trimesh.Trimesh, np.ndarray, dict[str, np.ndarray]]:
-    """One world-space mesh for ray tests + per-face owning entity id."""
+def _world_meshes(root: Node, meshes: dict[str, PieceMesh]) -> tuple[trimesh.Trimesh, np.ndarray, dict[str, np.ndarray]]:
+    """One world-space mesh for ray tests + per-face owning entity id.
+    Only opaque palette geometry occludes (not water or resin)."""
     xf = world_transforms(root)
     vs, fs, owner, off = [], [], [], 0
     bounds: dict[str, np.ndarray] = {}
@@ -303,8 +384,8 @@ def _world_meshes(root: Node, kit: KitView) -> tuple[trimesh.Trimesh, np.ndarray
     def walk(n: Node, ent_id: str):
         nonlocal off
         eid = n.name if "~" not in n.name and n.name != "diorama" else ent_id
-        if n.mesh:
-            pm = kit.meshes[n.mesh]
+        if n.mesh and meshes[n.mesh].material == "kit_palette":
+            pm = meshes[n.mesh]
             m = xf[n.name]
             v = (np.c_[pm.positions, np.ones(len(pm.positions))] @ m.T)[:, :3]
             f = pm.indices.reshape(-1, 3)
@@ -326,8 +407,9 @@ def camera_limits(bounds: np.ndarray) -> dict:
     return {"pitch_min": 10.0, "pitch_max": 70.0, "dist_min": round(span * 0.3, 2), "dist_max": round(span * 1.4, 2)}
 
 
-def visibility(root: Node, kit: KitView, ents: list[dict], cam: dict, min_fraction: float = 0.25) -> dict[str, float]:
-    world, owner, bounds = _world_meshes(root, kit)
+def visibility(root: Node, meshes: dict[str, PieceMesh], ents: list[dict], cam: dict,
+               min_fraction: float = 0.25) -> dict[str, float]:
+    world, owner, bounds = _world_meshes(root, meshes)
     centre = world.bounds.mean(axis=0)
     dist = (cam["dist_min"] + cam["dist_max"]) / 2
     eyes = []
@@ -355,22 +437,40 @@ def visibility(root: Node, kit: KitView, ents: list[dict], cam: dict, min_fracti
 
 # ---------------------------------------------------------------- build
 
+def _layout_params(recipe: dict) -> dict:
+    """Recipe params plus version defaults: recipes pinned to layout 0.1.x
+    keep their original look (no lean)."""
+    params = dict(recipe.get("params", {}))
+    ver = tuple(int(x) for x in str(recipe.get("generator", {}).get("version", LAYOUT_VERSION)).split(".")[:2])
+    params.setdefault("lean", ver >= (0, 2))
+    return params
+
+
 def build_diorama(kit: KitView, *, diorama_id: str, recipe: dict, out: Path, layout: str = "canal_street",
-                  kit_asset_ids: dict[str, str] | None = None) -> dict:
+                  kit_asset_ids: dict[str, str] | None = None, batch: str = "merged") -> dict:
     """`recipe` is a catalog RecipeBody; its hash keys the build and the
-    puzzle scene. Returns the build manifest."""
+    puzzle scene. `batch` is "merged" (default; few draw calls) or
+    "instanced" (one node per kit piece; needs params.lean = false).
+    Returns the build manifest."""
     if layout != "canal_street":
         raise KeyError(f"unknown layout {layout!r}")
+    if batch not in ("merged", "instanced"):
+        raise ValueError(f"batch must be merged or instanced, not {batch!r}")
     rh = recipe_hash(recipe)
     bdir = out / "dioramas" / diorama_id / rh[:20]
-    root, ents = canal_street(kit, int(recipe["seed"]), dict(recipe.get("params", {})))
+    params = _layout_params(recipe)
+    if batch == "instanced" and params["lean"]:
+        raise ValueError("instanced output can't express house lean (glTF TRS has no shear); set params.lean=false")
+    root, ents = canal_street(kit, int(recipe["seed"]), params)
+    water_info = next(n.extras["water"] for n in root.children if n.name == "env~water")
+    meshes = {**kit.meshes, **_water_meshes(water_info)}
 
     xf = world_transforms(root)
     for e in ents:
         e["pos"] = [round(float(v), 3) for v in xf[e["id"]][:3, 3]]
-    world, _, _ = _world_meshes(root, kit)
+    world, _, bounds = _world_meshes(root, meshes)
     cam = camera_limits(world.bounds)
-    vis = visibility(root, kit, ents, cam)
+    vis = visibility(root, meshes, ents, cam)
     for e in ents:
         if vis.get(e["id"], 0.0) >= 0.25:
             e["tags"] = sorted(set(e["tags"]) | {"hide_spot"})
@@ -382,6 +482,24 @@ def build_diorama(kit: KitView, *, diorama_id: str, recipe: dict, out: Path, lay
             sync(c, by_id)
     sync(root, {e["id"]: e for e in ents})
 
+    # entity_index: 1-based in entity order (0 = environment). In merged output
+    # it is what TEXCOORD_2.x carries; aabb (root space) is the tap target.
+    index = {e["id"]: i + 1 for i, e in enumerate(ents)}
+    def tag(n: Node):
+        if n.name in index and n.extras is not None:
+            n.extras["entity_index"] = index[n.name]
+            if batch == "merged" and n.name in bounds:
+                n.extras["aabb"] = [[round(float(v), 3) for v in bounds[n.name][0] - xf[root.name][:3, 3]],
+                                    [round(float(v), 3) for v in bounds[n.name][1] - xf[root.name][:3, 3]]]
+        for c in n.children:
+            tag(c)
+    tag(root)
+    out_root, out_meshes = root, meshes
+    if batch == "merged":
+        out_root, static = merge(root, meshes, keep=lambda n: (n.extras or {}).get("kind") in DYNAMIC_KINDS,
+                                 entity_index=index)
+        out_meshes = {**meshes, "static": static}
+
     scene = {
         "schema": "terrella.puzzle_scene/1",
         "diorama_id": diorama_id,
@@ -391,31 +509,41 @@ def build_diorama(kit: KitView, *, diorama_id: str, recipe: dict, out: Path, lay
         "camera": cam,
         "entities": ents,
     }
-    glb = write_scene(root, kit.meshes, kit.palette_png, extras={
+    glb = write_scene(out_root, out_meshes, kit.palette_png, materials=_materials(water_info), extras={
         "schema": "terrella.diorama/1", "diorama_id": diorama_id, "recipe_hash": f"sha256:{rh}",
         "layout": {"name": layout, "version": LAYOUT_VERSION}, "context_rules": "terrella.context_rules/1",
-        "tap_rule": "nearest ancestor node whose name has no '~'",
+        "batch": batch,
+        "tap_rule": ("merged mesh: TEXCOORD_2.x = entity_index (0 = environment); or hit-test node extras.aabb"
+                     if batch == "merged" else "nearest ancestor node whose name has no '~'"),
+        "entity_count": len(ents),
     })
     _check_ids(glb, ents)
     bdir.mkdir(parents=True, exist_ok=True)
     (bdir / "diorama.glb").write_bytes(glb)
     (bdir / "puzzle_scene.json").write_text(json.dumps(scene, indent=1))
     used = sorted({e.get("kit_piece") for e in ents if e.get("kit_piece")} |
-                  {n for n in _meshes_used(root)})
+                  {n for n in _meshes_used(root) if n in kit.meshes})
     manifest = {
         "schema": "terrella.diorama_build/1",
         "diorama_id": diorama_id, "recipe_hash": rh, "recipe": recipe,
-        "layout": {"name": layout, "version": LAYOUT_VERSION},
+        "layout": {"name": layout, "version": LAYOUT_VERSION, "batch": batch},
         "files": {"glb": str((bdir / "diorama.glb").relative_to(out)), "glb_sha256": hashlib.sha256(glb).hexdigest(),
                   "glb_bytes": len(glb), "puzzle_scene": str((bdir / "puzzle_scene.json").relative_to(out))},
         "kit_pieces": used,
         "parents": [kit_asset_ids[s] for s in used] if kit_asset_ids else [],
         "stats": {"entities": len(ents), "tris": int(len(world.faces)),
                   "hide_spots": sum("hide_spot" in e["tags"] for e in ents),
+                  "draw_surfaces": _surfaces(out_root),
                   "kinds": {k: sum(e["kind"] == k for e in ents) for k in sorted({e["kind"] for e in ents})}},
     }
     (bdir / "manifest.json").write_text(json.dumps(manifest, indent=2))
     return manifest
+
+
+def _surfaces(root: Node) -> int:
+    """Mesh nodes in the output = draw calls per pass before engine batching."""
+    n = 1 if root.mesh else 0
+    return n + sum(_surfaces(c) for c in root.children)
 
 
 def _meshes_used(root: Node) -> set[str]:

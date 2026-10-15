@@ -1,7 +1,7 @@
 {
  "schema": "terrella.puzzle_scene/1",
  "diorama_id": "dio_nl_synthetic_canal",
- "recipe_hash": "sha256:d642444a1b609ab8df35477f76c17a08ce492f15a623fde199ce7d736e69b1ee",
+ "recipe_hash": "sha256:8f2d9a7579b6b77ab8e8bdc3e4007036aaa96c505c1107f806e1afd34d561826",
  "style": "nl_canal",
  "landmarks": [],
  "camera": {
@@ -37,9 +37,9 @@
    "parent": "house_00",
    "kit_piece": "nl_canal.roof.gable",
    "pos": [
-    -11.225,
+    -11.232,
     9.4,
-    -4.1
+    -3.968
    ]
   },
   {
@@ -77,7 +77,7 @@
    "pos": [
     -12.892,
     1.0,
-    0.3
+    0.314
    ]
   },
   {
@@ -95,9 +95,9 @@
    "parent": "house_00",
    "kit_piece": "nl_canal.window.plain",
    "pos": [
-    -9.558,
+    -9.559,
     1.0,
-    0.3
+    0.314
    ]
   },
   {
@@ -115,9 +115,9 @@
    "parent": "house_00",
    "kit_piece": "nl_canal.window.tall",
    "pos": [
-    -12.892,
+    -12.894,
     3.8,
-    0.3
+    0.353
    ]
   },
   {
@@ -135,9 +135,9 @@
    "parent": "house_00",
    "kit_piece": "nl_canal.window.flowers",
    "pos": [
-    -11.225,
+    -11.228,
     3.8,
-    0.3
+    0.353
    ]
   },
   {
@@ -155,9 +155,9 @@
    "parent": "house_00",
    "kit_piece": "nl_canal.window.tall",
    "pos": [
-    -9.558,
+    -9.561,
     3.8,
-    0.3
+    0.353
    ]
   },
   {
@@ -175,9 +175,9 @@
    "parent": "house_00",
    "kit_piece": "nl_canal.window.flowers",
    "pos": [
-    -12.892,
+    -12.896,
     6.8,
-    0.3
+    0.395
    ]
   },
   {
@@ -195,9 +195,9 @@
    "parent": "house_00",
    "kit_piece": "nl_canal.window.plain",
    "pos": [
-    -11.225,
+    -11.23,
     6.8,
-    0.3
+    0.395
    ]
   },
   {
@@ -215,9 +215,9 @@
    "parent": "house_00",
    "kit_piece": "nl_canal.window.plain",
    "pos": [
-    -9.558,
+    -9.563,
     6.8,
-    0.3
+    0.395
    ]
   },
   {
@@ -246,9 +246,9 @@
    "parent": "house_01",
    "kit_piece": "nl_canal.roof.gable",
    "pos": [
-    -6.575,
+    -6.626,
     9.4,
-    -4.1
+    -3.906
    ]
   },
   {
@@ -261,9 +261,9 @@
    "parent": "house_01",
    "kit_piece": "nl_canal.chimney.brick",
    "pos": [
-    -5.651,
+    -5.705,
     10.101,
-    -4.8
+    -4.591
    ]
   },
   {
@@ -299,9 +299,9 @@
    "parent": "house_01",
    "kit_piece": "nl_canal.window.plain",
    "pos": [
-    -5.525,
+    -5.53,
     1.0,
-    0.3
+    0.321
    ]
   },
   {
@@ -319,9 +319,9 @@
    "parent": "house_01",
    "kit_piece": "nl_canal.window.plain",
    "pos": [
-    -7.625,
+    -7.645,
     3.8,
-    0.3
+    0.378
    ]
   },
   {
@@ -339,9 +339,9 @@
    "parent": "house_01",
    "kit_piece": "nl_canal.window.plain",
    "pos": [
-    -5.525,
+    -5.545,
     3.8,
-    0.3
+    0.378
    ]
   },
   {
@@ -359,9 +359,9 @@
    "parent": "house_01",
    "kit_piece": "nl_canal.window.tall",
    "pos": [
-    -7.625,
+    -7.662,
     6.8,
-    0.3
+    0.44
    ]
   },
   {
@@ -379,9 +379,9 @@
    "parent": "house_01",
    "kit_piece": "nl_canal.window.flowers",
    "pos": [
-    -5.525,
+    -5.562,
     6.8,
-    0.3
+    0.44
    ]
   },
   {
@@ -410,9 +410,9 @@
    "parent": "house_02",
    "kit_piece": "nl_canal.roof.gable",
    "pos": [
-    -2.325,
+    -2.39,
     9.4,
-    -4.1
+    -3.817
    ]
   },
   {
@@ -425,9 +425,9 @@
    "parent": "house_02",
    "kit_piece": "nl_canal.chimney.brick",
    "pos": [
-    -1.401,
+    -1.468,
     9.59,
-    -4.8
+    -4.511
    ]
   },
   {
@@ -463,9 +463,9 @@
    "parent": "house_02",
    "kit_piece": "nl_canal.window.plain",
    "pos": [
-    -1.275,
+    -1.282,
     1.0,
-    0.3
+    0.33
    ]
   },
   {
@@ -483,9 +483,9 @@
    "parent": "house_02",
    "kit_piece": "nl_canal.window.plain",
    "pos": [
-    -3.375,
+    -3.401,
     3.8,
-    0.3
+    0.414
    ]
   },
   {
@@ -503,9 +503,9 @@
    "parent": "house_02",
    "kit_piece": "nl_canal.window.plain",
    "pos": [
-    -1.275,
+    -1.301,
     3.8,
-    0.3
+    0.414
    ]
   },
   {
@@ -523,9 +523,9 @@
    "parent": "house_02",
    "kit_piece": "nl_canal.window.flowers",
    "pos": [
-    -3.375,
+    -3.422,
     6.8,
-    0.3
+    0.505
    ]
   },
   {
@@ -543,9 +543,9 @@
    "parent": "house_02",
    "kit_piece": "nl_canal.window.flowers",
    "pos": [
-    -1.275,
+    -1.322,
     6.8,
-    0.3
+    0.505
    ]
   },
   {
@@ -574,9 +574,9 @@
    "parent": "house_03",
    "kit_piece": "nl_canal.roof.gable",
    "pos": [
-    2.125,
+    2.153,
     9.4,
-    -4.1
+    -3.969
    ]
   },
   {
@@ -612,9 +612,9 @@
    "parent": "house_03",
    "kit_piece": "nl_canal.window.flowers",
    "pos": [
-    0.592,
+    0.595,
     1.0,
-    0.3
+    0.314
    ]
   },
   {
@@ -632,9 +632,9 @@
    "parent": "house_03",
    "kit_piece": "nl_canal.window.flowers",
    "pos": [
-    3.658,
+    3.661,
     1.0,
-    0.3
+    0.314
    ]
   },
   {
@@ -652,9 +652,9 @@
    "parent": "house_03",
    "kit_piece": "nl_canal.window.flowers",
    "pos": [
-    0.592,
+    0.603,
     3.8,
-    0.3
+    0.353
    ]
   },
   {
@@ -672,9 +672,9 @@
    "parent": "house_03",
    "kit_piece": "nl_canal.window.flowers",
    "pos": [
-    2.125,
+    2.136,
     3.8,
-    0.3
+    0.353
    ]
   },
   {
@@ -692,9 +692,9 @@
    "parent": "house_03",
    "kit_piece": "nl_canal.window.plain",
    "pos": [
-    3.658,
+    3.67,
     3.8,
-    0.3
+    0.353
    ]
   },
   {
@@ -712,9 +712,9 @@
    "parent": "house_03",
    "kit_piece": "nl_canal.window.tall",
    "pos": [
-    0.592,
+    0.612,
     6.8,
-    0.3
+    0.395
    ]
   },
   {
@@ -732,9 +732,9 @@
    "parent": "house_03",
    "kit_piece": "nl_canal.window.flowers",
    "pos": [
-    2.125,
+    2.145,
     6.8,
-    0.3
+    0.395
    ]
   },
   {
@@ -752,9 +752,9 @@
    "parent": "house_03",
    "kit_piece": "nl_canal.window.tall",
    "pos": [
-    3.658,
+    3.679,
     6.8,
-    0.3
+    0.395
    ]
   },
   {
@@ -783,9 +783,9 @@
    "parent": "house_04",
    "kit_piece": "nl_canal.roof.gable",
    "pos": [
-    6.575,
+    6.651,
     6.4,
-    -4.1
+    -3.967
    ]
   },
   {
@@ -821,9 +821,9 @@
    "parent": "house_04",
    "kit_piece": "nl_canal.window.flowers",
    "pos": [
-    7.625,
+    7.637,
     1.0,
-    0.3
+    0.321
    ]
   },
   {
@@ -841,9 +841,9 @@
    "parent": "house_04",
    "kit_piece": "nl_canal.window.plain",
    "pos": [
-    5.525,
+    5.57,
     3.8,
-    0.3
+    0.379
    ]
   },
   {
@@ -861,9 +861,9 @@
    "parent": "house_04",
    "kit_piece": "nl_canal.window.flowers",
    "pos": [
-    7.625,
+    7.67,
     3.8,
-    0.3
+    0.379
    ]
   },
   {
@@ -892,9 +892,9 @@
    "parent": "house_05",
    "kit_piece": "nl_canal.roof.gable",
    "pos": [
-    11.225,
+    11.286,
     6.4,
-    -4.1
+    -4.02
    ]
   },
   {
@@ -907,9 +907,9 @@
    "parent": "house_05",
    "kit_piece": "nl_canal.chimney.brick",
    "pos": [
-    12.325,
+    12.388,
     6.59,
-    -4.8
+    -4.718
    ]
   },
   {
@@ -945,9 +945,9 @@
    "parent": "house_05",
    "kit_piece": "nl_canal.window.flowers",
    "pos": [
-    9.558,
+    9.568,
     1.0,
-    0.3
+    0.312
    ]
   },
   {
@@ -965,9 +965,9 @@
    "parent": "house_05",
    "kit_piece": "nl_canal.window.tall",
    "pos": [
-    12.892,
+    12.901,
     1.0,
-    0.3
+    0.312
    ]
   },
   {
@@ -985,9 +985,9 @@
    "parent": "house_05",
    "kit_piece": "nl_canal.window.tall",
    "pos": [
-    9.558,
+    9.595,
     3.8,
-    0.3
+    0.347
    ]
   },
   {
@@ -1005,9 +1005,9 @@
    "parent": "house_05",
    "kit_piece": "nl_canal.window.tall",
    "pos": [
-    11.225,
+    11.261,
     3.8,
-    0.3
+    0.347
    ]
   },
   {
@@ -1025,9 +1025,9 @@
    "parent": "house_05",
    "kit_piece": "nl_canal.window.flowers",
    "pos": [
-    12.892,
+    12.928,
     3.8,
-    0.3
+    0.347
    ]
   },
   {

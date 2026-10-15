@@ -46,6 +46,9 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument("--seed", type=int, default=7)
     d.add_argument("--houses", type=int, default=6)
     d.add_argument("--boats", type=int, default=2)
+    d.add_argument("--batch", default="merged", choices=["merged", "instanced"],
+                   help="merged: static geometry in one mesh (few draw calls); instanced: a node per kit piece")
+    d.add_argument("--no-lean", action="store_true", help="upright houses (required for --batch instanced)")
 
     w = sub.add_parser("worker", help="claim and run catalog jobs (kit.build, diorama.build)")
     w.add_argument("--catalog", required=True, help="catalog base URL")
@@ -87,8 +90,8 @@ def main(argv: list[str] | None = None) -> int:
                   "osm": {"extract_id": "synthetic"},          # no OSM yet: seeded layout
                   "style_spec_id": f"local:{kit_json['palette_hash'][:20]}",
                   "kit": sorted(ids.values()), "seed": a.seed,
-                  "params": {"houses": a.houses, "boats": a.boats}}
-        m = build_diorama(kit, diorama_id=a.id, recipe=recipe, out=out, kit_asset_ids=ids)
+                  "params": {"houses": a.houses, "boats": a.boats, **({"lean": False} if a.no_lean else {})}}
+        m = build_diorama(kit, diorama_id=a.id, recipe=recipe, out=out, kit_asset_ids=ids, batch=a.batch)
         print(json.dumps({k: m[k] for k in ("recipe_hash", "files", "stats")}, indent=2))
         _merge_dioramas(out, m)
         return 0

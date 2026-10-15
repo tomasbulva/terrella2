@@ -114,11 +114,109 @@ def scene(tmp_path_factory):
     out = tmp_path_factory.mktemp("d")
     build_kit(KIT, out, ROOT / "prices.toml", log=lambda *_: None)
     ids = json.loads((out / "kits/nl_canal/kit.json").read_text())["slugs"]
-    recipe = {"generator": {"name": "canal_street", "version": "0.1.0"}, "osm": {"extract_id": "synthetic"},
+    recipe = {"generator": {"name": "canal_street", "version": "0.2.0"}, "osm": {"extract_id": "synthetic"},
               "style_spec_id": "local:x", "kit": sorted(ids.values()), "seed": 7, "params": {"houses": 6}}
     m = build_diorama(KitView.from_out(out, "nl_canal"), diorama_id="dio_test", recipe=recipe, out=out, kit_asset_ids=ids)
     m2 = build_diorama(KitView.from_out(out, "nl_canal"), diorama_id="dio_test", recipe=recipe, out=out / "again")
     return out, m, m2
+
+
+@pytest.fixture(scope="module")
+def upright(scene):
+    """Same layout without lean, merged and instanced, for equivalence checks."""
+    from terrella_assets.diorama import KitView, build_diorama
+    out = scene[0]
+    ids = json.loads((out / "kits/nl_canal/kit.json").read_text())["slugs"]
+    recipe = {"generator": {"name": "canal_street", "version": "0.2.0"}, "osm": {"extract_id": "synthetic"},
+              "style_spec_id": "local:x", "kit": sorted(ids.values()), "seed": 7, "params": {"houses": 6, "lean": False}}
+    kit = KitView.from_out(out, "nl_canal")
+    mm = build_diorama(kit, diorama_id="dio_m", recipe=recipe, out=out)
+    mi = build_diorama(kit, diorama_id="dio_i", recipe=recipe, out=out, batch="instanced")
+    return out, kit, recipe, mm, mi
+
+
+def _world_tris(glb: bytes) -> "np.ndarray":
+    """Every triangle in world space, sorted, as an (n, 9) array."""
+    import numpy as np
+    from terrella_assets.gltf import _accessor, _chunks
+    js, binary = _chunks(glb)
+    tris = []
+
+    def walk(i, parent):
+        n = js["nodes"][i]
+        t = np.eye(4)
+        t[:3, 3] = n.get("translation", [0, 0, 0])
+        x, y, z, w = n.get("rotation", [0, 0, 0, 1])
+        r = np.array([[1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
+                      [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
+                      [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)]])
+        m = parent @ t @ np.block([[r * np.array(n.get("scale", [1, 1, 1])), np.zeros((3, 1))], [np.zeros((1, 3)), 1]])
+        if "mesh" in n:
+            prim = js["meshes"][n["mesh"]]["primitives"][0]
+            p = _accessor(js, binary, prim["attributes"]["POSITION"]).astype(float)
+            p = p @ m[:3, :3].T + m[:3, 3]
+            tris.append(p[_accessor(js, binary, prim["indices"]).reshape(-1, 3)].reshape(-1, 9))
+        for c in n.get("children", []):
+            walk(c, m)
+    walk(js["scenes"][0]["nodes"][0], np.eye(4))
+    return np.vstack(tris)
+
+
+def test_merged_matches_instanced_geometry(upright):
+    import numpy as np
+    out, _, _, mm, mi = upright
+    a = _world_tris((out / mm["files"]["glb"]).read_bytes())
+    b = _world_tris((out / mi["files"]["glb"]).read_bytes())
+    from scipy.spatial import cKDTree
+    assert a.shape == b.shape
+    d, _ = cKDTree(b).query(a)                       # every merged triangle exists in the instanced scene
+    assert d.max() < 1e-3
+    assert mm["stats"]["draw_surfaces"] <= 6 < 50 < mi["stats"]["draw_surfaces"]
+    pa = json.loads((out / mm["files"]["puzzle_scene"]).read_text())
+    pb = json.loads((out / mi["files"]["puzzle_scene"]).read_text())
+    assert pa["entities"] == pb["entities"]          # batching never changes the puzzle view
+
+
+def test_merged_entities_resolve(scene):
+    import numpy as np
+    from terrella_assets.gltf import _accessor, _chunks
+    out, m, _ = scene
+    js, binary = _chunks((out / m["files"]["glb"]).read_bytes())
+    sc = json.loads((out / m["files"]["puzzle_scene"]).read_text())
+    by_name = {n["name"]: n for n in js["nodes"]}
+    idx = {e["id"]: by_name[e["id"]]["extras"]["entity_index"] for e in sc["entities"]}
+    assert sorted(idx.values()) == list(range(1, len(idx) + 1))
+    static = by_name["env~static"]
+    prim = js["meshes"][static["mesh"]]["primitives"][0]
+    ent = _accessor(js, binary, prim["attributes"]["TEXCOORD_2"])[:, 0]
+    present = set(np.unique(ent).astype(int))
+    dynamic = {e["id"] for e in sc["entities"] if e["kind"] == "boat"}
+    assert present - {0} == {idx[i] for i in idx if i not in dynamic}
+    assert all("mesh" in by_name[i] for i in dynamic)
+    for e in sc["entities"]:
+        if e["id"] not in dynamic:
+            lo, hi = map(np.array, by_name[e["id"]]["extras"]["aabb"])
+            assert (hi >= lo).all()
+
+
+def test_water_is_a_scene_element(scene):
+    from terrella_assets.gltf import _chunks
+    out, m, _ = scene
+    js, _ = _chunks((out / m["files"]["glb"]).read_bytes())
+    water = next(n for n in js["nodes"] if n["name"] == "env~water")
+    mat = js["materials"][js["meshes"][water["mesh"]]["primitives"][0]["material"]]
+    assert mat["name"] == "terrella.water" and mat["alphaMode"] == "BLEND"
+    w = water["extras"]["water"]
+    assert w["bed"] < w["level"] and len(w["bounds"]) == 4
+    assert "nl_canal.slab.water" not in m["kit_pieces"]
+
+
+def test_lean_needs_merged_output(upright):
+    from terrella_assets.diorama import build_diorama
+    out, kit, recipe, _, _ = upright
+    leaning = {**recipe, "params": {"houses": 6}}
+    with pytest.raises(ValueError, match="lean"):
+        build_diorama(kit, diorama_id="dio_x", recipe=leaning, out=out, batch="instanced")
 
 
 def test_scene_is_deterministic(scene):

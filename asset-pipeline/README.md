@@ -10,7 +10,7 @@ python -m terrella_assets ledger out --by provider                    # or user 
 python -m terrella_assets preview out      # three.js preview; serves terrella-v2/ so it can read ../puzzles rules
 python -m terrella_assets sync-prices --catalog URL --token ADMIN     # push prices.toml rows the catalog lacks
 python -m terrella_assets worker  --catalog URL --token WORKER        # claim kit.build / diorama.build jobs
-pytest                                                                # 14 tests; integration ones need ../catalog, ../puzzles
+pytest                                                                # 18 tests; integration ones need ../catalog, ../puzzles
 ```
 
 Screenshots: [kit pieces](examples/kit_pieces.png), [diorama by day](examples/diorama_day.png), [at night with context rules](examples/diorama_night.png). Example sidecar: [puzzle_scene.json](examples/puzzle_scene.dio_nl_synthetic_canal.json).
@@ -41,9 +41,11 @@ kit.toml ─► generator ─► cleanup ─► export ────────�
 - **Normal maps:** `TEXCOORD_0` is constant per face, so engines can't derive tangents from it (Godot gets NaN and normal-mapped faces turn white). Every GLB therefore also ships `TEXCOORD_1`, a box projection in metres, plus explicit `TANGENT`s consistent with it. Sample normal and detail maps with `TEXCOORD_1` (Godot: `UV2`). All outputs pass the Khronos glTF validator with 0 errors and 0 warnings.
 
 **Diorama (`diorama.glb`)**
-- Instanced: one mesh per kit piece, with many nodes pointing at it, and one shared material.
-- **Node name = puzzle entity id.** Helper geometry is named `<entity>~<part>` or `env~<part>`. Tap rule: walk up to the nearest ancestor whose name has no `~`.
-- **Node extras = `{kind, attrs, tags, kit_piece}`**, so the renderer can apply `../puzzles/data/context_rules.json` per node. The preview does exactly that for lit windows and lamps and for boats being present.
+- **Merged by default** (`--batch merged`). All static kit geometry is one mesh, `env~static`, with one palette material. `TEXCOORD_2` = (entity_index, height above the piece pivot). The result is **5 draw surfaces instead of 92**. Things that move or toggle (boats) stay instanced. `--batch instanced --no-lean` gives the old one-node-per-piece layout; it has identical geometry and puzzle entities, and the test checks this.
+- **Entity nodes are named with the puzzle entity id** and keep their transforms. Node extras = `{kind, attrs, tags, kit_piece, entity_index, aabb}`, so the renderer can apply `../puzzles/data/context_rules.json` per entity. In merged output this goes through a small entity-state texture indexed by `TEXCOORD_2.x`. The preview does exactly that for lit windows and lamps and for boats being present.
+- **Water is a scene element, not a kit piece.** `env~water` is a gridded surface with material `terrella.water` (alpha blend) and `extras.water = {level, bed, bounds, shallow, deep, flow}`. Engines replace it with their water shader. `env~resin` caps the canal ends.
+- **Houses lean** toward the canal (layout ≥ 0.2.0, `params.lean`). The lean is baked in during the merge; instanced output refuses it because glTF TRS has no shear.
+- See [docs/closing-the-look-gap.md](docs/closing-the-look-gap.md) for the phone measurements and what the engine has to change.
 
 **Puzzle scene (`terrella.puzzle_scene/1`)**
 - Stable for a recipe hash: the layout is seeded, the output is byte-identical on rebuild, and this is tested.
@@ -73,7 +75,8 @@ Reference it as `generator = "blender:path/to/script.py"`. The lean/bend belongs
 - **AI meshes lose their own texture.** They get recoloured to one role until an atlas bake step exists.
 - **No baked AO.** This is the biggest look risk on a phone; it belongs in a Blender bake stage.
 - **Layout is synthetic (`canal_street`), not from OSM.** The output contract is what an OSM layout must also meet.
-- **Per-node emission (lit windows) needs per-instance shader params in the engine.** Godot supports `instance uniform`.
+- **Flat palette surfaces.** Brick, tile and cobble patterns from the spike's `base.gdshader` aren't ported to the kit shader yet, and there are no per-house colour variants. See the look-gap doc.
+- **Godot import of `TEXCOORD_2`** (expected as `CUSTOM0`) still needs verifying in the spike.
 - **One worker per cache dir.** There's no locking.
 - **`puzzle_scene` is not its own asset kind** in the catalog; it's a blob referenced from build meta. Worth adding a kind if clients ever download it.
 - **The preview is a plain three.js viewer, not the engine's web export.**

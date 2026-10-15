@@ -31,7 +31,7 @@ It's an art project first and a showcase of agent-driven art generation second. 
 
 ### Contracts between the parts
 - **glTF kit pieces.** Metres, +Y up, front +Z. One mesh and one material per piece, palette atlas in `TEXCOORD_0`, box-projected `TEXCOORD_1` plus explicit tangents for normal maps.
-- **`diorama.glb`.** Node name = puzzle entity id. Node extras carry `{kind, attrs, tags}`, which the renderer evaluates with `puzzles/data/context_rules.json`. That way the window a clue calls lit is the window the shader lights.
+- **`diorama.glb`.** Static geometry is merged into one mesh, a handful of draw calls. Each vertex carries its puzzle entity index (`TEXCOORD_2`). Entity nodes are named with the puzzle entity id, and their extras carry `{kind, attrs, tags, entity_index, aabb}`, which the renderer evaluates with `puzzles/data/context_rules.json`. That way the window a clue calls lit is the window the shader lights. Water is a scene element (`terrella.water` material plus `extras.water`), rendered by the engine's water shader.
 - **`puzzle_scene.json`** (`terrella.puzzle_scene/1`). Stable per recipe hash.
 - **Scene state** (`world-context/schema/scene-state.v1.schema.json`). Plain JSON, so any renderer can consume it.
 - **Catalog API** ([`catalog/openapi.json`](catalog/openapi.json)). The pipeline is a `worker`; apps read the public manifest.

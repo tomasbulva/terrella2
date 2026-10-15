@@ -9,6 +9,12 @@ mesh) and per-node `extras`. This writer does exactly that and nothing more:
   * TRS transforms, hierarchy preserved.
 The reader only understands the single-mesh, single-primitive GLBs that the
 kit export writes.
+
+`merge()` bakes every static mesh node into one world-space mesh (one draw
+call per material instead of one per node). Each merged vertex carries
+TEXCOORD_2 = (entity_index, height above its piece's pivot), so engines can
+still drive per-entity state (lit windows, highlight, hide) from a small
+lookup texture and sway foliage by local height.
 """
 from __future__ import annotations
 
@@ -31,6 +37,8 @@ class PieceMesh:
     image_png: bytes
     uv2: np.ndarray | None = None        # TEXCOORD_1: box-projected, metres (for tiling detail/normal maps)
     tangents: np.ndarray | None = None   # TANGENT (xyzw), consistent with uv2
+    material: str = "kit_palette"        # key into write_scene's material table
+    uv3: np.ndarray | None = None        # TEXCOORD_2: (entity_index, height above piece pivot), merged meshes only
 
     def __post_init__(self):
         if self.uv2 is None or self.tangents is None:
@@ -126,17 +134,29 @@ class Node:
     scale: tuple[float, float, float] = (1.0, 1.0, 1.0)
     extras: dict | None = None
     children: list["Node"] = field(default_factory=list)
+    shear: tuple[float, float] = (0.0, 0.0)  # (x, z) offset per metre of local height: a house's list and lean.
+                                            # glTF TRS can't express it, so only merged output may use it.
 
     def matrix(self) -> np.ndarray:
         c, s = np.cos(self.yaw), np.sin(self.yaw)
         r = np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
+        sh = np.array([[1.0, self.shear[0], 0.0], [0.0, 1.0, 0.0], [0.0, self.shear[1], 1.0]])
         m = np.eye(4)
-        m[:3, :3] = r * np.array(self.scale)
+        m[:3, :3] = r @ sh @ np.diag(self.scale)
         m[:3, 3] = self.translation
         return m
 
 
-def write_scene(root: Node, meshes: dict[str, PieceMesh], palette_png: bytes, extras: dict | None = None) -> bytes:
+KIT_MATERIAL = {"name": "kit_palette", "pbrMetallicRoughness": {
+    "baseColorTexture": {"index": 0}, "metallicFactor": 0.0, "roughnessFactor": 0.85}}
+
+
+def write_scene(root: Node, meshes: dict[str, PieceMesh], palette_png: bytes, extras: dict | None = None,
+                materials: dict[str, dict] | None = None) -> bytes:
+    """`materials` adds named materials (glTF material dicts) that meshes can
+    select with PieceMesh.material; "kit_palette" is always material 0."""
+    mats = {"kit_palette": KIT_MATERIAL, **(materials or {})}
+    mat_index = {k: i for i, k in enumerate(mats)}
     used = []
     def walk(n: Node):
         if n.mesh and n.mesh not in used:
@@ -176,9 +196,10 @@ def write_scene(root: Node, meshes: dict[str, PieceMesh], palette_png: bytes, ex
                 "TANGENT": add_acc(pm.tangents.astype("<f4"), 5126, "VEC4", 34962),
                 "TEXCOORD_0": add_acc(pm.uvs.astype("<f4"), 5126, "VEC2", 34962),
                 "TEXCOORD_1": add_acc(pm.uv2.astype("<f4"), 5126, "VEC2", 34962),
+                **({"TEXCOORD_2": add_acc(pm.uv3.astype("<f4"), 5126, "VEC2", 34962)} if pm.uv3 is not None else {}),
             },
             "indices": add_acc(pm.indices.astype("<u4"), 5125, "SCALAR", 34963),
-            "material": 0,
+            "material": mat_index[pm.material],
         }
         mesh_index[slug] = len(gl_meshes)
         gl_meshes.append({"name": slug, "primitives": [prim]})
@@ -198,6 +219,8 @@ def write_scene(root: Node, meshes: dict[str, PieceMesh], palette_png: bytes, ex
             d["rotation"] = [0.0, float(np.sin(n.yaw / 2)), 0.0, float(np.cos(n.yaw / 2))]
         if n.scale != (1.0, 1.0, 1.0):
             d["scale"] = [float(round(v, 5)) for v in n.scale]
+        if any(n.shear):
+            raise ValueError(f"node {n.name!r} has a shear, which glTF TRS can't express; merge() it first")
         if n.extras:
             d["extras"] = n.extras
         if n.children:
@@ -211,8 +234,7 @@ def write_scene(root: Node, meshes: dict[str, PieceMesh], palette_png: bytes, ex
         "scenes": [{"nodes": [0], **({"extras": extras} if extras else {})}],
         "nodes": nodes,
         "meshes": gl_meshes,
-        "materials": [{"name": "kit_palette", "pbrMetallicRoughness": {
-            "baseColorTexture": {"index": 0}, "metallicFactor": 0.0, "roughnessFactor": 0.85}}],
+        "materials": list(mats.values()),
         "textures": [{"source": 0, "sampler": 0}],
         "samplers": [{"magFilter": 9728, "minFilter": 9728}],    # NEAREST: palette swatches
         "images": [{"bufferView": img_view, "mimeType": "image/png"}],
@@ -240,3 +262,97 @@ def world_transforms(root: Node) -> dict[str, np.ndarray]:
             walk(c, m)
     walk(root, np.eye(4))
     return out
+
+
+def merge(root: Node, meshes: dict[str, PieceMesh], keep, entity_index: dict[str, int],
+          name: str = "static") -> tuple[Node, PieceMesh | None]:
+    """Bake every mesh node under `root` into one world-space mesh, except
+    subtrees for which `keep(node)` is true (moving or toggled things, e.g.
+    boats), which stay as instanced nodes.
+
+    Returns a new tree and the merged mesh (or None if nothing merged):
+      * entity nodes (names without "~") survive without their mesh, keeping
+        transform and extras, so ids, tap targets and anchors still resolve;
+      * "~" helper nodes are dropped; their geometry is in the merged mesh;
+      * the merged mesh hangs off "env~<name>" under the root, with an
+        identity transform relative to the root;
+      * TEXCOORD_2.x = entity_index of the nearest entity ancestor (0 = env),
+        TEXCOORD_2.y = height above the source piece's pivot (foliage sway);
+      * only meshes with the kit_palette material are merged.
+    TEXCOORD_1/tangents are recomputed in root space, so tiling detail lines
+    up across pieces.
+    """
+    xf = world_transforms(root)
+    inv_root = np.linalg.inv(xf[root.name])
+    P, N, U, H, E, I = [], [], [], [], [], []
+    off = 0
+
+    def take(n: Node, eid: str):
+        nonlocal off
+        pm = meshes[n.mesh]
+        m = inv_root @ xf[n.name]
+        lin = m[:3, :3]
+        P.append(pm.positions @ lin.T + m[:3, 3])
+        nm = pm.normals @ np.linalg.inv(lin)          # inverse transpose, applied to row vectors
+        N.append(nm / np.maximum(np.linalg.norm(nm, axis=1, keepdims=True), 1e-12))
+        U.append(pm.uvs)
+        H.append(pm.positions[:, 1] * float(np.linalg.norm(lin[:, 1])))
+        E.append(np.full(len(pm.positions), float(entity_index.get(eid, 0))))
+        tri = pm.indices.reshape(-1, 3)
+        if np.linalg.det(lin) < 0:                    # mirrored: keep front faces front
+            tri = tri[:, ::-1]
+        I.append(tri.reshape(-1) + off)
+        off += len(pm.positions)
+
+    def yaw_of(m: np.ndarray) -> float:
+        return float(np.arctan2(-m[2, 0], m[0, 0]))  # column 0 is R*(sx,0,0); shear never touches it
+
+    out_world: dict[int, np.ndarray] = {}            # id(out node) -> its rigid root-space matrix
+
+    def attach(parent_out: Node, n: Node, mesh: str | None, children: list[Node]) -> Node:
+        """Re-parent `n` under parent_out with a TRS-safe transform that puts its
+        origin and heading where the source tree had them (shear dropped)."""
+        m = inv_root @ xf[n.name]
+        pw = out_world[id(parent_out)]
+        local = np.linalg.inv(pw) @ np.r_[m[:3, 3], 1.0]
+        yaw = yaw_of(m) - yaw_of(pw)
+        o = Node(n.name, mesh, tuple(float(round(v, 5)) for v in local[:3]), yaw if abs(yaw) > 1e-9 else 0.0,
+                 n.scale if mesh else (1.0, 1.0, 1.0), n.extras, children)
+        parent_out.children.append(o)
+        out_world[id(o)] = pw @ Node("", None, o.translation, o.yaw).matrix()
+        return o
+
+    def walk(n: Node, eid: str, parent_out: Node, sheared: bool) -> None:
+        is_entity = "~" not in n.name
+        eid = n.name if is_entity else eid
+        sheared = sheared or any(n.shear)
+        if keep(n):
+            if sheared:
+                raise ValueError(f"kept node {n.name!r} sits under a shear; it can't stay instanced")
+            attach(parent_out, n, n.mesh, n.children)
+            return
+        out = attach(parent_out, n, None, []) if is_entity else parent_out
+        if n.mesh and meshes[n.mesh].material == "kit_palette":
+            take(n, eid)
+        elif n.mesh:                                   # other materials (water, resin) stay as nodes
+            if is_entity or sheared:
+                raise ValueError(f"{n.name!r}: non-palette meshes must be unsheared env~ nodes")
+            attach(parent_out, n, n.mesh, [])
+        for c in n.children:
+            walk(c, eid, out, sheared)
+
+    new_root = Node(root.name, None, root.translation, root.yaw, root.scale, root.extras, [])
+    out_world[id(new_root)] = np.eye(4)
+    for c in root.children:
+        walk(c, "env", new_root, any(root.shear))
+    if not P:
+        return new_root, None
+    pos = np.vstack(P).astype(np.float32)
+    nrm = np.vstack(N).astype(np.float32)
+    uv2, tan = box_uv_tangents(pos, nrm)
+    merged = PieceMesh(positions=pos, normals=nrm, uvs=np.vstack(U).astype(np.float32),
+                       indices=np.concatenate(I).astype(np.uint32), image_png=b"", uv2=uv2, tangents=tan,
+                       uv3=np.c_[np.concatenate(E), np.concatenate(H)].astype(np.float32))
+    new_root.children.insert(0, Node(f"env~{name}", mesh=name))
+    return new_root, merged
+
