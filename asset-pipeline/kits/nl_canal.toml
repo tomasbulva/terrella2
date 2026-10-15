@@ -1,0 +1,209 @@
+# Amsterdam canal kit. The [style] block is what the seed-image -> vision
+# model step will eventually write; here it's hand-authored.
+# Piece names are "<category>.<variant>"; the catalog slug is "<kit>.<name>".
+
+[kit]
+name = "nl_canal"
+version = "0.2.0"
+seed = 7
+
+[style]
+name = "amsterdam_canal_cozy"
+notes = "Warm brick, white trims, dark green shutters, storybook lean."
+wobble = 0.015
+source = { kind = "hand-authored", author = "pipeline", seed_image = "" }
+
+[style.palette]
+wall = "#9b3f2f"        # brick red
+wall_alt = "#5a4034"    # dark brown brick
+trim = "#efe8dc"        # white cornices, plastered facades
+roof = "#4a4743"
+window_frame = "#f2efe6"
+glass = "#2f3f4a"       # engine shader: interior mapping + night emission
+door = "#2e5a3e"        # canal green (doors, painted facades, boats)
+metal = "#25282a"
+wood = "#2f5040"        # shutters, flower boxes
+stone = "#9a948a"
+foliage = "#5e8a3c"
+foliage_alt = "#7aa04a"
+trunk = "#5a4636"
+flower = "#d9485f"
+water = "#3d5f6b"
+ground = "#a69c8c"
+
+[budget]                # defaults for pieces below (mobile kit piece)
+max_tris = 800
+max_extent_m = 12.0
+
+# --- facades and roofs: unit-sized, scaled per house by the assembler (no wobble:
+# scaling would magnify it). The role picks the house colour.
+[[piece]]
+name = "facade.brick"
+kind = "facade"
+pivot = "wall"
+params = { role = "wall", wobble_scale = 0 }
+tags = ["facade"]
+
+[[piece]]
+name = "facade.dark"
+kind = "facade"
+pivot = "wall"
+params = { role = "wall_alt", wobble_scale = 0 }
+tags = ["facade"]
+
+[[piece]]
+name = "facade.white"
+kind = "facade"
+pivot = "wall"
+params = { role = "trim", wobble_scale = 0 }
+tags = ["facade"]
+
+[[piece]]
+name = "facade.green"
+kind = "facade"
+pivot = "wall"
+params = { role = "door", wobble_scale = 0 }
+tags = ["facade"]
+
+[[piece]]
+name = "roof.gable"
+kind = "roof_gable"
+params = { wobble_scale = 0 }
+tags = ["roof"]
+
+[[piece]]
+name = "slab.wall"
+kind = "slab"
+params = { role = "wall_alt", wobble_scale = 0 }
+tags = ["env"]
+
+[[piece]]
+name = "slab.stone"
+kind = "slab"
+params = { role = "stone", wobble_scale = 0 }
+tags = ["env"]
+
+[[piece]]
+name = "slab.ground"
+kind = "slab"
+params = { role = "ground", wobble_scale = 0 }
+tags = ["env"]
+
+[[piece]]
+name = "slab.water"
+kind = "slab"
+params = { role = "water", wobble_scale = 0 }
+tags = ["env"]
+
+# --- facade details
+[[piece]]
+name = "window.tall"
+kind = "window"
+pivot = "wall"
+params = { width = 0.9, height = 1.6, bars_x = 2, bars_y = 3, shutters = true }
+tags = ["facade", "window"]
+
+[[piece]]
+name = "window.flowers"
+kind = "window"
+pivot = "wall"
+params = { width = 1.0, height = 1.3, bars_x = 2, bars_y = 2, flower_box = true }
+tags = ["facade", "window"]
+
+[[piece]]
+name = "window.plain"
+kind = "window"
+pivot = "wall"
+params = { width = 0.9, height = 1.4, bars_x = 2, bars_y = 2 }
+tags = ["facade", "window"]
+
+[[piece]]
+name = "door.stoep"
+kind = "door"
+pivot = "wall"
+params = { width = 1.0, height = 2.3, stoep_steps = 2, lantern = true }
+tags = ["facade", "door"]
+
+[[piece]]
+name = "door.plain"
+kind = "door"
+pivot = "wall"
+params = { width = 1.0, height = 2.3, stoep_steps = 1, lantern = false }
+tags = ["facade", "door"]
+
+[[piece]]
+name = "gable.step"
+kind = "gable_step"
+pivot = "wall"
+params = { width = 5.0, steps = 3 }
+tags = ["facade", "gable"]
+
+[[piece]]
+name = "chimney.brick"
+kind = "chimney"
+params = { width = 0.5, depth = 0.4, height = 1.0 }
+tags = ["roof"]
+
+# --- street
+[[piece]]
+name = "bollard"
+kind = "bollard"
+tags = ["street", "prop"]
+
+[[piece]]
+name = "lamp.street"
+kind = "street_lamp"
+params = { height = 3.4 }
+tags = ["street", "prop", "light"]
+
+[[piece]]
+name = "bike.omafiets"
+kind = "bike"
+tags = ["street", "prop"]
+
+[[piece]]
+name = "boat.sloop"
+kind = "boat"
+params = { role = "door" }
+tags = ["water", "prop"]
+
+[[piece]]
+name = "tree.lime"
+kind = "tree"
+params = { height = 7.0, crown_blobs = 6 }
+budget = { max_tris = 1200 }
+tags = ["nature", "tree"]
+
+[[piece]]
+name = "tree.poplar"
+kind = "tree"
+params = { height = 9.0, species = "cone" }
+tags = ["nature", "tree"]
+
+# --- Blender-scripted pieces (blender/kit_pieces.py). Needs `blender` or the bpy wheel.
+[[piece]]
+name = "gable.bell"
+kind = "gable_bell"
+generator = "blender"
+pivot = "wall"
+params = { width = 4.6, height = 3.2 }
+budget = { max_tris = 1000 }
+tags = ["facade", "gable"]
+
+[[piece]]
+name = "lamp.lantern"
+kind = "lantern"
+generator = "blender"
+params = { height = 3.0 }
+tags = ["street", "prop", "light"]
+
+# --- AI image-to-3D path, mock providers (no network, placeholder prices).
+# Swap "mock" for "hi3d" once a provider is wired and priced.
+[[piece]]
+name = "planter.ai"
+kind = "planter"
+generator = "ai3d:mock"
+target_height_m = 0.8
+params = { role = "foliage", shape = "round terracotta pot with a box hedge" }
+budget = { max_tris = 600 }
+tags = ["street", "prop", "ai"]
