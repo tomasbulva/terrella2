@@ -1,0 +1,17 @@
+{
+  "summer_day": {"local_date": "2026-07-04", "local_time": "2026-07-04T14:10:00+02:00", "phase": "day",
+    "phase_ends_at": "2026-07-04T21:05:00+02:00", "season": "summer", "weather": "clear",
+    "weather_stable_until": "2026-07-04T18:00:00+02:00", "snow_cover": false, "geocell": "u173z"},
+  "autumn_dusk_rain": {"local_date": "2026-10-15", "local_time": "2026-10-15T18:40:00+02:00", "phase": "dusk",
+    "phase_ends_at": "2026-10-15T19:25:00+02:00", "season": "autumn", "weather": "rain",
+    "weather_stable_until": "2026-10-15T20:00:00+02:00", "snow_cover": false, "geocell": "u173z"},
+  "winter_night_snow": {"local_date": "2026-12-21", "local_time": "2026-12-21T22:15:00+01:00", "phase": "night",
+    "phase_ends_at": "2026-12-22T07:40:00+01:00", "season": "winter", "weather": "snow",
+    "weather_stable_until": "2026-12-21T23:30:00+01:00", "snow_cover": true, "geocell": "u173z"},
+  "spring_dawn_fog": {"local_date": "2027-04-12", "local_time": "2027-04-12T06:20:00+02:00", "phase": "dawn",
+    "phase_ends_at": "2027-04-12T07:05:00+02:00", "season": "spring", "weather": "fog",
+    "weather_stable_until": "2027-04-12T09:00:00+02:00", "snow_cover": false, "geocell": "u173z"},
+  "autumn_storm_night": {"local_date": "2026-11-02", "local_time": "2026-11-02T23:05:00+01:00", "phase": "night",
+    "phase_ends_at": "2026-11-03T07:20:00+01:00", "season": "autumn", "weather": "storm",
+    "weather_stable_until": "2026-11-02T23:45:00+01:00", "snow_cover": false, "geocell": "u173z"}
+}

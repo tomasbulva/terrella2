@@ -1,0 +1,25 @@
+[project]
+name = "terrella-assets"
+version = "0.1.0"
+description = "Terrella v2 asset pipeline: style spec + piece requests -> mobile glTF kit pieces with provenance and a cost ledger"
+requires-python = ">=3.11"
+dependencies = [
+  "numpy>=1.26",
+  "trimesh>=4.4",
+  "scipy>=1.11",
+  "pillow>=10",
+  "fast-simplification>=0.1.7",   # trimesh quadric decimation backend
+  "rtree>=1.0",                   # trimesh ray queries (hide-spot visibility pass)
+  "networkx>=3",                  # trimesh fix_normals
+  "httpx>=0.27",                  # catalog client
+]
+
+[project.optional-dependencies]
+blender = ["bpy==5.2.*"]          # or a `blender` binary on PATH / $BLENDER
+dev = ["pytest>=8"]                # integration tests also import ../catalog (fastapi, sqlalchemy) and ../puzzles
+
+[tool.setuptools.packages.find]
+include = ["terrella_assets*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

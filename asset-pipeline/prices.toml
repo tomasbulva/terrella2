@@ -1,0 +1,68 @@
+# Versioned price table, same keys as the catalog's price table:
+# (provider, model, unit) -> usd per unit, matched EXACTLY (no globs), like
+# the catalog does. `python -m terrella_assets sync-prices` pushes missing or
+# changed rows to the catalog (admin token). Ledger rows record the version
+# they were priced at; bump `version` when you change a number.
+# A usage with no matching row is an error (here and in the catalog: 422).
+
+[meta]
+version = "2026-10-15.2"
+
+# Local compute. Not reported to the catalog (free), kept for local totals.
+[[price]]
+provider = "local"
+model = "procedural"
+unit = "cpu_second"
+usd = 0.0
+
+[[price]]
+provider = "local"
+model = "blender"
+unit = "cpu_second"
+usd = 0.0
+
+# Mock providers (tests and dry runs). Placeholder numbers, not quotes.
+[[price]]
+provider = "mock"
+model = "mock-image-1"
+unit = "image"
+usd = 0.04
+placeholder = true
+
+[[price]]
+provider = "mock"
+model = "mock-3d-1"
+unit = "generation"
+usd = 0.30
+placeholder = true
+
+# Real providers. The generators are stubs, but the catalog rejects unpriced
+# usage, so the rows exist. ALL PLACEHOLDERS: replace from actual invoices
+# before the first paid call.
+[[price]]
+provider = "gemini-image"
+model = "nano-banana"
+unit = "image"
+usd = 0.039
+placeholder = true
+
+[[price]]
+provider = "hi3d"
+model = "hi3d"
+unit = "generation"
+usd = 0.50
+placeholder = true
+
+[[price]]
+provider = "hunyuan3d"
+model = "hunyuan3d-3"
+unit = "generation"
+usd = 0.50
+placeholder = true
+
+[[price]]
+provider = "trellis2-local"
+model = "trellis.2"
+unit = "gpu_second"
+usd = 0.0004
+placeholder = true

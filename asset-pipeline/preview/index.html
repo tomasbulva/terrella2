@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kit Preview</title>
+<style>
+  :root { --bg:#f4f1ea; --panel:#fffdf8; --ink:#2b2a27; --muted:#7a756b; --line:#e3ddd0; --accent:#b0553a; --bad:#c0392b; --ok:#3c7a4a; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#1d1c1a; --panel:#262522; --ink:#ece8df; --muted:#a39d91; --line:#3a3833; --accent:#e08a6a; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.4 system-ui, sans-serif; display:grid; grid-template-columns: 300px 1fr 320px; height:100vh; }
+  aside, section { overflow:auto; }
+  aside { border-right:1px solid var(--line); background:var(--panel); }
+  #info { border-left:1px solid var(--line); background:var(--panel); padding:12px; }
+  h1 { font-size:15px; margin:12px; }
+  .kit { margin:0 12px 6px; color:var(--muted); font-size:12px; }
+  .piece { padding:8px 12px; border-top:1px solid var(--line); cursor:pointer; display:grid; grid-template-columns:1fr auto; gap:2px 8px; }
+  .piece:hover, .piece.sel { background:color-mix(in srgb, var(--accent) 12%, transparent); }
+  .piece small { color:var(--muted); }
+  .bad { color:var(--bad); } .ok { color:var(--ok); }
+  #view { position:relative; }
+  canvas { display:block; width:100%; height:100%; }
+  .bar { position:absolute; top:10px; left:10px; display:flex; gap:6px; flex-wrap:wrap; }
+  .bar button { background:var(--panel); color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:5px 10px; cursor:pointer; }
+  .bar button.on { border-color:var(--accent); color:var(--accent); }
+  .swatches { display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; margin:8px 0 12px; }
+  .sw { font-size:10px; color:var(--muted); } .sw i { display:block; height:18px; border-radius:3px; border:1px solid var(--line); }
+  dl { display:grid; grid-template-columns:auto 1fr; gap:3px 10px; margin:0 0 12px; } dt { color:var(--muted); } dd { margin:0; word-break:break-all; }
+  pre { font-size:11px; white-space:pre-wrap; word-break:break-word; background:var(--bg); padding:8px; border-radius:6px; }
+  #err { padding:12px; color:var(--bad); }
+  @media (max-width: 900px) { body { grid-template-columns:1fr; grid-template-rows: 40vh 50vh auto; height:auto; } aside { order:2; } #view { order:1; height:50vh; } #info { order:3; } }
+</style>
+</head>
+<body>
+<aside><h1>Kit preview</h1><div id="list"></div><div id="err"></div></aside>
+<section id="view">
+  <div class="bar">
+    <button id="bStreet">All pieces</button>
+    <button id="bWire">Wireframe</button>
+    <button id="bNight">Night</button>
+    <button id="bScale">1.8 m figure</button>
+  </div>
+</section>
+<div id="info">Select a piece.</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+const Q = new URLSearchParams(location.search);
+const OUT = Q.get("out") || "../out";
+const RULES_URL = Q.get("rules") || "../../puzzles/data/context_rules.json";   // serve from terrella-v2/ to reach it
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// ---- scene
+const view = $("view");
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+view.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(35, 1, 0.05, 500);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+const hemi = new THREE.HemisphereLight(0xcfe3ff, 0x8a7a63, 1.1);
+const sun = new THREE.DirectionalLight(0xffe2b8, 2.4);
+sun.position.set(6, 10, 7); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -15, right: 15, top: 15, bottom: -15, far: 60 });
+scene.add(hemi, sun);
+const ground = new THREE.Mesh(new THREE.CircleGeometry(40, 48), new THREE.MeshStandardMaterial({ color: 0xa69c8c, roughness: 1 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+const grid = new THREE.GridHelper(40, 40, 0x000000, 0x000000); grid.material.opacity = 0.12; grid.material.transparent = true; grid.position.y = 0.002; scene.add(grid);
+const figure = new THREE.Mesh(new THREE.CapsuleGeometry(0.22, 1.36, 4, 8), new THREE.MeshStandardMaterial({ color: 0x4466aa }));
+figure.position.set(-1, 0.9, 1.2); figure.castShadow = true; figure.visible = false; scene.add(figure);
+const stage = new THREE.Group(); scene.add(stage);
+
+// ---- state + shader hook: role from palette UV cell. Glass glows where the
+// mesh's uLit is 1. For pieces that is "night"; for dioramas it comes from
+// context_rules.json per node (the same file the puzzle library uses).
+const state = { wire: false, night: false, street: false, selected: null, diorama: null };
+let ROLES = ["wall","wall_alt","trim","roof","window_frame","glass","door","metal","wood","stone","foliage","foliage_alt","trunk","flower","water","ground"], GRID = 4;
+// Merged dioramas: one mesh, TEXCOORD_2.x = entity index. Per-entity state
+// (lit) lives in a 1-row texture, the same scheme the engine uses.
+const ENT = { tex: null, list: [], on: { value: 0 }, n: { value: 1 } };
+const clock = new THREE.Clock(), uTime = { value: 0 };
+function patch(mat) {
+  if (mat.userData.uLit || !mat.map) return mat;
+  mat.userData.uLit = { value: 0 };
+  mat.map && (mat.map.magFilter = THREE.NearestFilter, mat.map.minFilter = THREE.NearestFilter, mat.map.generateMipmaps = false, mat.map.needsUpdate = true);
+  const glass = ROLES.indexOf("glass"), uLit = mat.userData.uLit;
+  mat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, { uLit, uEntOn: ENT.on, uEntN: ENT.n, uEnt: { get value() { return ENT.tex; } } });
+    sh.vertexShader = "attribute vec2 aEnt;\nvarying float vEnt;\n" + sh.vertexShader.replace(
+      "#include <begin_vertex>", "#include <begin_vertex>\n vEnt = aEnt.x;");
+    sh.fragmentShader = "uniform float uLit, uEntOn, uEntN;\nuniform sampler2D uEnt;\nvarying float vEnt;\n" + sh.fragmentShader.replace(
+      "#include <emissivemap_fragment>",
+      `#include <emissivemap_fragment>
+       vec2 cell = floor(vMapUv * ${GRID.toFixed(1)});
+       float role = cell.y * ${GRID.toFixed(1)} + cell.x;
+       float lit = uEntOn > 0.5 ? texture2D(uEnt, vec2((floor(vEnt + 0.5) + 0.5) / uEntN, 0.5)).r : uLit;
+       if (abs(role - ${glass.toFixed(1)}) < 0.5) totalEmissiveRadiance += lit * vec3(1.0, 0.62, 0.28) * 1.4;`);
+  };
+  return mat;
+}
+// Minimal evaluator for terrella.context_rules/1 (rules apply in order, later wins).
+let RULES = null;
+function entityState(ex, ctx) {
+  const st = {};
+  for (const r of (RULES?.rules || [])) {
+    if (!Object.entries(r.when).every(([k, vs]) => Array.isArray(vs) ? vs.includes(ctx[k]) : vs === ctx[k])) continue;
+    if (r.match.kind && !r.match.kind.includes(ex.kind)) continue;
+    if (r.match.attrs && !Object.entries(r.match.attrs).every(([k, v]) => ex.attrs?.[k] === v)) continue;
+    Object.assign(st, r.set);
+  }
+  return st;
+}
+function entityOf(o, hit) {     // merged mesh: the vertex's entity index; else nearest ancestor without "~"
+  const a = hit && o.geometry?.attributes.aEnt;
+  if (a && hit.face) { const e = ENT.list[Math.round(a.getX(hit.face.a))]; if (e) return e; }
+  while (o && (o.name.includes("~") || !o.userData?.kind)) o = o.parent;
+  return o;
+}
+// The engine replaces "terrella.water" with its water shader; this is a cheap stand-in.
+function waterMaterial(src) {
+  const m = new THREE.MeshStandardMaterial({ color: src.color, transparent: true, opacity: 0.85, roughness: 0.06, metalness: 0 });
+  m.onBeforeCompile = (sh) => {
+    sh.uniforms.uTime = uTime;
+    sh.vertexShader = "varying vec3 vW;\n" + sh.vertexShader.replace("#include <worldpos_vertex>",
+      "#include <worldpos_vertex>\n vW = (modelMatrix * vec4(transformed, 1.0)).xyz;");
+    sh.fragmentShader = "uniform float uTime;\nvarying vec3 vW;\n" + sh.fragmentShader.replace("#include <normal_fragment_maps>",
+      `#include <normal_fragment_maps>
+       float r1 = sin(vW.x * 2.1 + uTime * 0.9) * sin(vW.z * 1.7 - uTime * 0.7);
+       float r2 = sin((vW.x + vW.z) * 4.3 + uTime * 1.3);
+       normal = normalize(normal + (viewMatrix * vec4(r1 * 0.12 + r2 * 0.05, 0.0, r2 * 0.1, 0.0)).xyz);`);
+  };
+  return m;
+}
+function applyLook() {
+  const ctx = { phase: state.night ? "night" : "day", weather: "clear", season: "summer", snow_cover: false };
+  ground.visible = grid.visible = !state.diorama;      // a diorama brings its own plinth (below y=0)
+  stage.traverse((o) => {
+    if (!o.isMesh || !o.material.userData.uLit) return;
+    let lit = state.night;
+    if (state.diorama) { const e = entityOf(o); lit = e ? !!entityState(e.userData, ctx).lit : false; }
+    o.material.userData.uLit.value = lit ? 1 : 0;
+    if (state.diorama) { const e = entityOf(o); if (e && e.userData.kind === "boat") o.visible = entityState(e.userData, ctx).present !== false; }
+  });
+  if (ENT.tex) {
+    ENT.list.forEach((e, i) => { ENT.tex.image.data[i * 4] = e && entityState(e.userData, ctx).lit ? 255 : 0; });
+    ENT.tex.needsUpdate = true;
+  }
+  sun.intensity = state.night ? 0.15 : 2.4; hemi.intensity = state.night ? 0.25 : 1.1;
+  scene.background = new THREE.Color(state.night ? 0x141a2a : getComputedStyle(document.body).getPropertyValue("--bg").trim() || "#f4f1ea");
+  stage.traverse((o) => { if (o.isMesh) o.material.wireframe = state.wire; });
+  for (const [id, on] of [["bWire", state.wire], ["bNight", state.night], ["bStreet", state.street], ["bScale", figure.visible]]) $(id).classList.toggle("on", on);
+}
+
+// ---- data
+const loader = new GLTFLoader();
+const glbCache = new Map();
+async function loadGlb(m) {
+  if (!glbCache.has(m.id)) glbCache.set(m.id, loader.loadAsync(`${OUT}/${m.files.glb}`).then((g) => {
+    g.scene.traverse((o) => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; patch(o.material); } });
+    return g.scene;
+  }));
+  return (await glbCache.get(m.id)).clone();
+}
+function frame(obj) {
+  const box = new THREE.Box3().setFromObject(obj), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  const d = Math.max(size.x, size.y * 1.5, size.z) * 1.15 + 1.5;
+  controls.target.copy(c); camera.position.set(c.x + d * 0.7, c.y + d * 0.45, c.z + d * 0.9); controls.update();
+}
+
+let pieces = [];
+async function showPiece(m) {
+  state.street = false; state.selected = m; state.diorama = null;
+  document.querySelectorAll(".piece").forEach((el) => el.classList.toggle("sel", el.dataset.id === m.id));
+  stage.clear(); const o = await loadGlb(m); stage.add(o); frame(o); applyLook(); info(m);
+}
+async function showStreet() {
+  state.street = true; state.diorama = null; stage.clear(); stage.position.set(0, 0, 0);
+  let x = 0;
+  for (const m of pieces) {
+    const o = await loadGlb(m), w = m.stats.extent_m[0];
+    o.position.x = x + w / 2; x += w + 0.6; stage.add(o);
+  }
+  stage.position.x = -x / 2; frame(stage); applyLook();
+}
+
+async function showDiorama(d) {
+  state.street = false; state.diorama = d; stage.clear(); stage.position.set(0, 0, 0);
+  document.querySelectorAll(".piece").forEach((el) => el.classList.toggle("sel", el.dataset.id === d.diorama_id));
+  const g = await loader.loadAsync(`${OUT}/${d.files.glb}`);
+  ENT.list = []; ENT.tex = null; ENT.on.value = 0;
+  g.scene.traverse((o) => { if (o.userData?.entity_index) ENT.list[o.userData.entity_index] = o; });
+  g.scene.traverse((o) => {
+    if (!o.isMesh) return;
+    o.castShadow = o.receiveShadow = !o.material.transparent;
+    if (o.material.name === "terrella.water") { o.material = waterMaterial(o.material); return; }
+    if (o.geometry.attributes.uv2) {               // TEXCOORD_2: merged batch
+      o.geometry.setAttribute("aEnt", o.geometry.attributes.uv2);
+      const n = ENT.list.length + 1;
+      ENT.tex = new THREE.DataTexture(new Uint8Array(n * 4), n, 1); ENT.n.value = n; ENT.on.value = 1;
+    } else if (!o.geometry.attributes.aEnt) {
+      o.geometry.setAttribute("aEnt", new THREE.BufferAttribute(new Float32Array(o.geometry.attributes.position.count * 2), 2));
+    }
+    o.material = patch(o.material.clone());
+  });
+  stage.add(g.scene); frame(g.scene); applyLook();
+  $("info").innerHTML = `<h1 style="margin:0 0 8px">${esc(d.diorama_id)}</h1>
+    <dl><dt>entities</dt><dd>${d.stats.entities}</dd><dt>hide spots</dt><dd>${d.stats.hide_spots}</dd>
+    <dt>tris</dt><dd>${d.stats.tris}</dd><dt>draw surfaces</dt><dd>${d.stats.draw_surfaces ?? "?"} (${esc(d.layout.batch || "instanced")})</dd><dt>GLB</dt><dd>${(d.files.glb_bytes / 1024).toFixed(0)} KB</dd>
+    <dt>rules</dt><dd>${RULES ? "context_rules.json loaded" : "not found (Night lights every window)"}</dd>
+    <dt>recipe</dt><dd>${esc(d.recipe_hash.slice(0, 16))}…</dd></dl>
+    <p>Click anything to see its puzzle entity. Night applies the context rules per window and lamp.</p>`;
+}
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+let down = null;
+renderer.domElement.addEventListener("pointerdown", (e) => { down = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener("pointerup", (e) => {
+  if (!state.diorama || !down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 4) return;
+  const r = renderer.domElement.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  const hit = ray.intersectObject(stage, true).find((h) => h.object.visible && !h.object.material.transparent);
+  const ent = hit && entityOf(hit.object, hit);
+  if (!ent) return;
+  const ctx = { phase: state.night ? "night" : "day", weather: "clear", season: "summer", snow_cover: false };
+  $("info").innerHTML = `<h1 style="margin:0 0 8px">${esc(ent.name)}</h1><dl><dt>kind</dt><dd>${esc(ent.userData.kind)}</dd>
+    <dt>kit piece</dt><dd>${esc(ent.userData.kit_piece || "")}</dd><dt>tags</dt><dd>${esc((ent.userData.tags || []).join(", "))}</dd></dl>
+    <b>attrs</b><pre>${esc(JSON.stringify(ent.userData.attrs, null, 2))}</pre>
+    <b>state (${ctx.phase})</b><pre>${esc(JSON.stringify(entityState(ent.userData, ctx), null, 2))}</pre>`;
+});
+
+function info(m) {
+  const p = m.provenance, c = m.cost;
+  $("info").innerHTML = `
+    <h1 style="margin:0 0 8px">${esc(m.name)}</h1>
+    <dl>
+      <dt>valid</dt><dd class="${m.validation.ok ? "ok" : "bad"}">${m.validation.ok ? "yes" : esc(m.validation.issues.join("; "))}</dd>
+      <dt>generator</dt><dd>${esc(m.recipe.generator)} ${esc(m.recipe.generator_version)}</dd>
+      <dt>tris</dt><dd>${m.stats.tris} / ${m.recipe.budget.max_tris}</dd>
+      <dt>extent</dt><dd>${m.stats.extent_m.map((v) => v.toFixed(2)).join(" × ")} m</dd>
+      <dt>pivot</dt><dd>${esc(m.pivot)}</dd>
+      <dt>roles</dt><dd>${esc(m.stats.roles.join(", "))}</dd>
+      <dt>cost</dt><dd>$${c.usd.toFixed(4)}${c.cache_hit ? " (cache hit now)" : ""}</dd>
+      <dt>GLB</dt><dd>${(m.files.glb_bytes / 1024).toFixed(1)} KB</dd>
+      <dt>asset id</dt><dd>${esc(m.id)}</dd>
+    </dl>
+    ${p.prompt ? `<b>Prompt</b><pre>${esc(p.prompt)}</pre>` : ""}
+    <b>Provenance</b><pre>${esc(JSON.stringify(p, null, 2))}</pre>
+    <b>Recipe</b><pre>${esc(JSON.stringify(m.recipe, null, 2))}</pre>`;
+}
+
+async function init() {
+  const idx = await (await fetch(`${OUT}/index.json`)).json();
+  const kits = [...new Set(Object.values(idx.assets).map((m) => m.kit.name))];
+  const list = $("list");
+  for (const k of kits) {
+    const kit = await (await fetch(`${OUT}/kits/${k}/kit.json`)).json();
+    ROLES = kit.palette_layout.roles; GRID = kit.palette_layout.grid;
+    const ms = Object.values(kit.pieces).map((id) => idx.assets[id]).filter(Boolean);
+    pieces.push(...ms);
+    const total = ms.reduce((s, m) => s + m.cost.usd, 0);
+    list.insertAdjacentHTML("beforeend", `<div class="kit"><b>${esc(kit.name)}</b> v${esc(kit.version)} · ${esc(kit.style.name)} · ${ms.length} pieces · $${total.toFixed(2)}
+      <div class="swatches">${ROLES.map((r) => `<div class="sw"><i style="background:${esc(kit.style.palette[r] || "transparent")}"></i>${esc(r)}</div>`).join("")}</div></div>`);
+    for (const m of ms) {
+      const el = document.createElement("div");
+      el.className = "piece"; el.dataset.id = m.id;
+      el.innerHTML = `<span>${esc(m.name)}</span><small class="${m.validation.ok ? "ok" : "bad"}">${m.validation.ok ? "✓" : "✗"}</small>
+        <small>${esc(m.recipe.generator)} · ${m.stats.tris} tris</small><small>$${m.cost.usd.toFixed(2)}</small>`;
+      el.onclick = () => showPiece(m);
+      list.appendChild(el);
+    }
+  }
+  RULES = await fetch(RULES_URL).then((r) => r.ok ? r.json() : null).catch(() => null);
+  const dios = Object.values(idx.dioramas || {});
+  if (dios.length) {
+    list.insertAdjacentHTML("afterbegin", `<div class="kit"><b>Dioramas</b></div>`);
+    let anchor = list.firstElementChild;
+    for (const d of dios) {
+      const el = document.createElement("div");
+      el.className = "piece"; el.dataset.id = d.diorama_id;
+      el.innerHTML = `<span>${esc(d.diorama_id)}</span><small></small><small>${d.stats.entities} entities · ${d.stats.tris} tris</small><small></small>`;
+      el.onclick = () => showDiorama(d);
+      anchor.after(el); anchor = el;
+    }
+    await showDiorama(dios[0]);
+  } else {
+    await showStreet();
+  }
+}
+
+$("bWire").onclick = () => { state.wire = !state.wire; applyLook(); };
+$("bNight").onclick = () => { state.night = !state.night; applyLook(); };
+$("bScale").onclick = () => { figure.visible = !figure.visible; applyLook(); };
+$("bStreet").onclick = () => showStreet();
+
+function resize() { const r = view.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(view); resize();
+renderer.setAnimationLoop(() => { uTime.value = clock.getElapsedTime(); controls.update(); renderer.render(scene, camera); });
+init().catch((e) => { $("err").textContent = `Could not load ${OUT}/index.json: ${e.message}. Run: python -m terrella_assets preview out`; });
+</script>
+</body>
+</html>

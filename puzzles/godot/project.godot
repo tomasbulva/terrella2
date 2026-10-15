@@ -1,0 +1,6 @@
+; Minimal project so the checker and its conformance test run headless.
+; Copy puzzle_check.gd into the game project; it has no dependencies.
+config_version=5
+
+[application]
+config/name="terrella-puzzles-check"

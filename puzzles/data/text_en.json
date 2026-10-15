@@ -1,0 +1,80 @@
+{
+  "schema": "terrella.text/1",
+  "locale": "en",
+  "nouns": {
+    "window": "window",
+    "door": "door",
+    "lamp": "street lamp",
+    "house": "house",
+    "tree": "tree",
+    "bike": "bike",
+    "boat": "boat",
+    "bollard": "bollard",
+    "roof": "roof",
+    "chimney": "chimney",
+    "bench": "bench",
+    "planter": "flower pot"
+  },
+  "attr": {
+    "shutters": "with {value} shutters",
+    "flower_box": {
+      "true": "with a flower box",
+      "false": "without a flower box"
+    },
+    "lit": {
+      "true": "that is lit",
+      "false": "that is dark"
+    },
+    "curtains": "with {value} curtains",
+    "color": "painted {value}",
+    "gable": "with a {value} gable",
+    "floor": "on floor {value}",
+    "snowy": {
+      "true": "covered in snow",
+      "false": "free of snow"
+    },
+    "foliage": {
+      "green": "with green leaves",
+      "orange": "with orange leaves",
+      "bare": "with bare branches",
+      "blossom": "in blossom"
+    },
+    "lantern": {
+      "true": "with a lantern",
+      "false": "without a lantern"
+    },
+    "name": "called {value}"
+  },
+  "templates": {
+    "riddle": "Find the {clue}.",
+    "trail_step": "Then find the {clue}.",
+    "near": "near a {noun}",
+    "near_id": "close to your last find",
+    "parent": "on the house {phrase}",
+    "seek": "{count} {token_plural} are hiding in town. Can you find them all?",
+    "pattern": "Make the {noun}s of {owner} match the postcard.",
+    "viewpoint": "Someone painted this postcard. Find the spot they painted it from."
+  },
+  "tokens": {
+    "token.golden_acorn": [
+      "golden acorn",
+      "golden acorns"
+    ],
+    "token.rubber_duck": [
+      "rubber duck",
+      "rubber ducks"
+    ],
+    "token.mitten": [
+      "lost mitten",
+      "lost mittens"
+    ],
+    "token.firefly_jar": [
+      "firefly jar",
+      "firefly jars"
+    ],
+    "token.paper_boat": [
+      "paper boat",
+      "paper boats"
+    ]
+  }
+}

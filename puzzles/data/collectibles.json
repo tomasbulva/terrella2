@@ -1,0 +1,26 @@
+{
+  "schema": "terrella.collectibles/1",
+  "note": "Starter catalog. `art` points at a catalog asset id (kit piece or 2D card). Eligibility is matched against a puzzle's reward_tags.",
+  "collectibles": [
+    {"id": "trinket.brass_key", "name": "Brass Key", "category": "trinket", "rarity": "common", "set": "keys_and_locks", "art": "kit:trinket.brass_key", "eligibility": {}},
+    {"id": "trinket.marble", "name": "Glass Marble", "category": "trinket", "rarity": "common", "set": "pocket_finds", "art": "kit:trinket.marble", "variant_axis": "season", "eligibility": {}},
+    {"id": "trinket.thimble", "name": "Silver Thimble", "category": "trinket", "rarity": "uncommon", "set": "pocket_finds", "art": "kit:trinket.thimble", "eligibility": {"any": ["tier:2", "tier:3"]}},
+    {"id": "trinket.compass", "name": "Pocket Compass", "category": "trinket", "rarity": "uncommon", "set": "keys_and_locks", "art": "kit:trinket.compass", "eligibility": {"any": ["type:trail", "type:viewpoint"]}},
+    {"id": "trinket.music_box", "name": "Tiny Music Box", "category": "trinket", "rarity": "rare", "set": "pocket_finds", "art": "kit:trinket.music_box", "eligibility": {"all": ["tier:3"]}},
+    {"id": "charm.raindrop", "name": "Raindrop Charm", "category": "charm", "rarity": "uncommon", "set": "weather_charms", "art": "kit:charm.raindrop", "eligibility": {"all": ["weather:rain"]}},
+    {"id": "charm.snowflake", "name": "Snowflake Charm", "category": "charm", "rarity": "uncommon", "set": "weather_charms", "art": "kit:charm.snowflake", "eligibility": {"all": ["weather:snow"]}},
+    {"id": "charm.fog_lantern", "name": "Fog Lantern", "category": "charm", "rarity": "rare", "set": "weather_charms", "art": "kit:charm.fog_lantern", "eligibility": {"all": ["weather:fog"]}},
+    {"id": "charm.lightning_jar", "name": "Lightning in a Jar", "category": "charm", "rarity": "legendary", "set": "weather_charms", "art": "kit:charm.lightning_jar", "eligibility": {"all": ["weather:storm"]}},
+    {"id": "charm.sunbeam", "name": "Sunbeam Charm", "category": "charm", "rarity": "common", "set": "weather_charms", "art": "kit:charm.sunbeam", "eligibility": {"all": ["weather:clear"], "any": ["phase:day", "phase:golden"]}},
+    {"id": "charm.night_owl", "name": "Night Owl", "category": "charm", "rarity": "uncommon", "set": "time_charms", "art": "kit:charm.night_owl", "eligibility": {"all": ["phase:night"]}},
+    {"id": "charm.early_bird", "name": "Early Bird", "category": "charm", "rarity": "rare", "set": "time_charms", "art": "kit:charm.early_bird", "eligibility": {"all": ["phase:dawn"]}},
+    {"id": "charm.lamplighter", "name": "Lamplighter's Hook", "category": "charm", "rarity": "rare", "set": "time_charms", "art": "kit:charm.lamplighter", "eligibility": {"all": ["context_clue"], "any": ["phase:dusk", "phase:night"]}},
+    {"id": "seasonal.conker", "name": "Shiny Conker", "category": "seasonal", "rarity": "common", "set": "four_seasons", "art": "kit:seasonal.conker", "eligibility": {"all": ["season:autumn"]}},
+    {"id": "seasonal.snow_globe", "name": "Mini Snow Globe", "category": "seasonal", "rarity": "rare", "set": "four_seasons", "art": "kit:seasonal.snow_globe", "eligibility": {"all": ["season:winter", "weather:snow"]}},
+    {"id": "seasonal.tulip_bulb", "name": "Tulip Bulb", "category": "seasonal", "rarity": "common", "set": "four_seasons", "art": "kit:seasonal.tulip_bulb", "eligibility": {"all": ["season:spring"]}},
+    {"id": "seasonal.ice_lolly", "name": "Ice Lolly Stick", "category": "seasonal", "rarity": "common", "set": "four_seasons", "art": "kit:seasonal.ice_lolly", "eligibility": {"all": ["season:summer"]}},
+    {"id": "postcard.nl_canal", "name": "Canal House Postcard", "category": "postcard", "rarity": "uncommon", "set": "postcards", "art": "render:postcard.nl_canal", "variant_axis": "phase", "eligibility": {"all": ["style:nl_canal"]}},
+    {"id": "postcard.viewfinder", "name": "Painter's Viewfinder", "category": "postcard", "rarity": "rare", "set": "postcards", "art": "kit:postcard.viewfinder", "eligibility": {"all": ["type:viewpoint", "tier:3"]}},
+    {"id": "keepsake.first_snow_2026", "name": "First Snow 2026", "category": "keepsake", "rarity": "legendary", "set": "keepsakes_2026", "art": "kit:keepsake.first_snow_2026", "eligibility": {"all": ["weather:snow", "season:winter"], "none": ["tier:1"]}}
+  ]
+}

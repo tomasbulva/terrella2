@@ -1,0 +1,4 @@
+pytest
+jsonschema
+astral   # cross-check only
+ephem    # cross-check only

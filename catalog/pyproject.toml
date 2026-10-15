@@ -1,0 +1,28 @@
+[project]
+name = "terrella-catalog"
+version = "0.1.0"
+description = "Terrella v2 asset catalog, diorama recipes, job queue and cost ledger"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "sqlalchemy>=2.0",
+    "pydantic>=2.7",
+]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.1"]
+dev = ["pytest>=8", "httpx>=0.27"]
+
+[project.scripts]
+terrella-catalog = "terrella_catalog.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["terrella_catalog*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
